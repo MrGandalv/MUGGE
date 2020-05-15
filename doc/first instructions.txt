@@ -1,0 +1,58 @@
+SHORT:
+
+install Git (choose the nano option if you see a drop down menus with vim)
+
+      |
+      |
+     \|/
+      '
+Go to folder you want the "MUGGE"-folder to be in
+
+      |
+      |
+     \|/
+      '
+right click and select "Git Bash here"
+
+      |
+      |
+     \|/
+      '
+go to GitHub and pur MUGGE repository and select the clone link (click on the green button on the very right)
+
+      |
+      |
+     \|/
+      '
+go back into your Git console and type:
+git clone URL-here (instead of "URL-here" you insert the copied link of course)
+
+      |
+      |
+     \|/
+      '
+git config --global user.name "Your name"
+git config --global user.email "Your Email"
+git config list - if you want to see all the other possible thing you can change, I never touched the others
+
+      |
+      |
+     \|/
+      '
+Done. Now watch any explanation on Youtube about how Git works :D
+
+
+LONG: 
+
+
+First of all install git from https://git-scm.com/
+
+if you install git there will be a drop down menu where you can select something like "vim" or "nano..." or something else. Those are (for me because I don't understand them) way too complicated and old editors. Vim is apparently considered as the end stage of the evolution of a programmer, don't ask me why. I can tell you that Vim is the most unintuitive Editor you've ever encountered, period! So choose something (if possible) that you are familiar with otherwise use nano... (... for something because I can't remember the name). This will be important if you commit something (however you might never use it if you always commit with the -m option)
+
+After installing Git you can go to the folder where you would like to have our MUGGE project folder. Git will greate this folder for you if you pull it from GitHub. Now, what does "commit" and "pull" and "push" mean?
+
+In principle you don't need GitHub at all. You just need Git. Go into any folder. Press right click and open the git bash in this folder. You can control this with your console as well but this way is just faster. First thing is to initialize the folder with "git init" - command (just type git init and enter). Then Git knows, that you want to keep track of what happens within this folder. It will greate the hidden ".git" folder where everything important is apparently stored. I personally never looked into this folder. If you clone a repository from GitHub then it just downloads this repository and creates a new and already initilized folder.
+
+if you now made any changes to the files in the repository or added new files then you have to commit (like save) them. But there are certain datatype we should not commit like pictures and audio files because git wil basically copy files that have changed which can get out of control (for memory) is you have big pictures for example. For that we just need to add tehm to a list of thing we don't want to be commited and save this txt list as ".gitignore.txt"
+
+For anything else go and watch for example: https://youtu.be/HVsySz-h9r4

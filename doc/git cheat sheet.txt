@@ -1,0 +1,116 @@
+Git Cheat Sheet
+
+-----------------------------------------------------------------------------------
+                                    GIT
+-----------------------------------------------------------------------------------                                    
+
+
+
+git init = erklärt Ordner (in dem ich mich befinde) zum git Ordner und 
+legt einen .git Ordner an
+
+-----------------------------------------------------------------------------------
+
+git log = zeigt an, was es alles für Zustände gab/gibt (die ich gespeichert hatte)
+
+git log --graph --oneline --all   - shows log in one line and all branches (if it is too long for the window then it will open an editor in which you can go on to ne next line with enter until it reads "END". Exit the Editor with "wq")
+
+git diff <signatur1> <signatur2>  - shows what needs to be changed to get from sig1 to sig2. with additional --color-words it shows only the words that changed
+
+git branch <brach name>           - creates new branch
+
+git checkout "branch name"        - changes to a certain branch, with additional -b before the branche name it greates the branch first and then checks it out
+
+git merge                         - vereint zwei branches. Falls Konflik angezeigt, muss es per Hand gelöst werden und dann mit 
+
+git merge --continue  fortsetzen
+
+      |
+      |
+     \|/
+      '
+
+git add [file] =  markiert Datei für Verwaltung an (ähnlich wie bei der Maus)
+
+git add . # adds all
+
+git add *.py # adds all py files
+
+git rm --cached <file name or added thing> #removes added stuff
+
+      |
+      |
+     \|/
+      '
+
+git status = zeigt was status ist
+
+      |
+      |
+     \|/
+      '
+
+git commit
+
+dann Commentar hinschreiben und mit Esc, Shift+zz rausgehen. (for Vim)
+
+git commit -m 'message' stores automatically the message without opening the editor
+
+
+-------------------------------------------------------------------------
+                            GITHUB
+-------------------------------------------------------------------------
+
+git remote show <remote name> #shows all informationa about that remote repository
+
+git remote # shows all remote repositories
+
+git remote add <remote name> <adress> #adds a remote repository
+
+      |
+      |
+     \|/
+      '
+
+git push -u <remote name><branch> #pushes the branch to the repository
+
+git push #if you already selected a remote repository
+
+      |
+      |
+     \|/
+      '
+
+git pull #pulls everything from the current rep.
+
+git pull <remote name><branch to be pushed> --allow-unrelated-histories #if the history of the remote branch and the local active branch have different histories
+
+git clone <URL from GitHub> #copys and pasts the folders from that repository
+
+-----------------------------------------------------------------------------------------
+                                CORRECTIONS                                              (source: https://youtu.be/FdZecVxzJbk)
+-----------------------------------------------------------------------------------------
+
+Only do correction on git history you havent pushed yet otherwise it will cause problems for other people working with the same repository!!
+
+git checkout <filename or signature> - you can checkout anything. If you made a bunch of changes and saved but not commited the file then this method sets the file back to the state you checked out. If you only give it the file name it will checkout the last commited status. To save the log of the branch of the given signature, just greate a new branch in this detached HEAD state. This new branch will just copy the log until this sig.
+
+git commit --amend -m '...'  - corrects the message for the last commit
+
+git cherry-pick <signature>  - takes the commit with the given signature from the branch where it was commited to and moves it on the branch you are currently at
+
+git reset --soft <signature> - say you commite something that you didn't want to commited yet. Then the soft reset will delete the last commit but will save the changes you made in your added files. That means it sets everthing back to the point before hitted enter on the commit command
+
+git reset <signature>        - like the soft version but the changes haven't been added yet
+
+git reset --hard <signature> - gets also rid of all untracket (already commited) files (that have been added after the commit of the signature or changes in that file), however, it does not delete untracked files you just added and never commited
+
+git clean -df                - deletes all the untracked f(iles) and d(irectories)
+
+If you deleted something you actually needed and can't find it in the log, then try:
+
+git reflog                   - shows EVRYTHING that has been done in this repository which is not older than 30 days
+
+if it is not there, it is lost forever
+
+git revert <signature>       - undo every change that was commited in that signature and commits this again in a new commit
