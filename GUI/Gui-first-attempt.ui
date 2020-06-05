@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QFrame" name="frame">
+   <widget class="QFrame" name="frame_model">
     <property name="geometry">
      <rect>
       <x>340</x>
@@ -32,7 +32,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QFrame" name="frame_2">
+    <widget class="QFrame" name="frame_box_1">
      <property name="geometry">
       <rect>
        <x>220</x>
@@ -48,7 +48,7 @@
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_3">
+    <widget class="QFrame" name="frame_box_2">
      <property name="geometry">
       <rect>
        <x>220</x>
@@ -64,7 +64,7 @@
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_4">
+    <widget class="QFrame" name="frame_box_3">
      <property name="geometry">
       <rect>
        <x>220</x>
@@ -80,7 +80,7 @@
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_5">
+    <widget class="QFrame" name="frame_box_4">
      <property name="geometry">
       <rect>
        <x>220</x>
@@ -96,7 +96,7 @@
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QWidget" name="widget" native="true">
+    <widget class="QWidget" name="widget_decision_box" native="true">
      <property name="geometry">
       <rect>
        <x>370</x>
@@ -106,7 +106,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_6">
+    <widget class="QFrame" name="frame_input">
      <property name="geometry">
       <rect>
        <x>9</x>
@@ -121,10 +121,10 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="text_input">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>0</x>
         <y>0</y>
         <width>131</width>
         <height>291</height>
@@ -139,7 +139,7 @@ p, li { white-space: pre-wrap; }
       </property>
      </widget>
     </widget>
-    <widget class="QFrame" name="frame_14">
+    <widget class="QFrame" name="frame_box_outcome">
      <property name="geometry">
       <rect>
        <x>530</x>
@@ -156,7 +156,7 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </widget>
-   <widget class="QFrame" name="frame_7">
+   <widget class="QFrame" name="frame_info">
     <property name="geometry">
      <rect>
       <x>40</x>
@@ -171,7 +171,7 @@ p, li { white-space: pre-wrap; }
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QFrame" name="frame_9">
+    <widget class="QFrame" name="frame_info_pic_1">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -187,7 +187,7 @@ p, li { white-space: pre-wrap; }
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_10">
+    <widget class="QFrame" name="frame_info_pic_2">
      <property name="geometry">
       <rect>
        <x>350</x>
@@ -196,6 +196,9 @@ p, li { white-space: pre-wrap; }
        <height>231</height>
       </rect>
      </property>
+     <property name="cursor">
+      <cursorShape>ArrowCursor</cursorShape>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -203,7 +206,7 @@ p, li { white-space: pre-wrap; }
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_11">
+    <widget class="QFrame" name="frame_info_pic_3">
      <property name="geometry">
       <rect>
        <x>700</x>
@@ -220,7 +223,7 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </widget>
-   <widget class="QFrame" name="frame_8">
+   <widget class="QFrame" name="frame_description">
     <property name="geometry">
      <rect>
       <x>40</x>
@@ -235,7 +238,7 @@ p, li { white-space: pre-wrap; }
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QFrame" name="frame_12">
+    <widget class="QFrame" name="frame_group_pic">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -244,6 +247,9 @@ p, li { white-space: pre-wrap; }
        <height>191</height>
       </rect>
      </property>
+     <property name="cursor">
+      <cursorShape>ClosedHandCursor</cursorShape>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -251,7 +257,7 @@ p, li { white-space: pre-wrap; }
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_13">
+    <widget class="QFrame" name="frame_description_text">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -268,7 +274,7 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="pushButton_classify">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -281,7 +287,7 @@ p, li { white-space: pre-wrap; }
      <string>classify</string>
     </property>
    </widget>
-   <widget class="QDial" name="dial">
+   <widget class="QDial" name="dial_volume">
     <property name="geometry">
      <rect>
       <x>830</x>
@@ -301,7 +307,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="lcdNumber">
+   <widget class="QLCDNumber" name="lcd_time_frame">
     <property name="geometry">
      <rect>
       <x>390</x>
@@ -309,6 +315,9 @@ p, li { white-space: pre-wrap; }
       <width>331</width>
       <height>51</height>
      </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>BlankCursor</cursorShape>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_3">
