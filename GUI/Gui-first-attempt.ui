@@ -41,12 +41,25 @@
        <height>80</height>
       </rect>
      </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="box_1">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>131</width>
+        <height>91</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_box_2">
      <property name="geometry">
@@ -63,6 +76,16 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="box_2">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>131</width>
+        <height>91</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_box_3">
      <property name="geometry">
@@ -79,6 +102,16 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="box_3">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>131</width>
+        <height>91</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_box_4">
      <property name="geometry">
@@ -95,6 +128,16 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="box_4">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>131</width>
+        <height>91</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="widget_decision_box" native="true">
      <property name="geometry">
@@ -105,6 +148,16 @@
        <height>291</height>
       </rect>
      </property>
+     <widget class="QGraphicsView" name="graphicsView_5">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>131</width>
+        <height>311</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_input">
      <property name="geometry">
@@ -154,6 +207,16 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="graphicsView_6">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>221</width>
+        <height>311</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QFrame" name="frame_info">
@@ -186,6 +249,16 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="graphicsView_2">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>351</width>
+        <height>251</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_info_pic_2">
      <property name="geometry">
@@ -205,6 +278,16 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="graphicsView_3">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-9</y>
+        <width>351</width>
+        <height>251</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_info_pic_3">
      <property name="geometry">
@@ -221,6 +304,16 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="graphicsView_4">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>351</width>
+        <height>251</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QFrame" name="frame_description">
@@ -256,6 +349,16 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QGraphicsView" name="graphicsView">
+      <property name="geometry">
+       <rect>
+        <x>-10</x>
+        <y>-10</y>
+        <width>301</width>
+        <height>211</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QFrame" name="frame_description_text">
      <property name="geometry">
@@ -272,6 +375,22 @@ p, li { white-space: pre-wrap; }
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
+     <widget class="QPlainTextEdit" name="plainTextEdit">
+      <property name="geometry">
+       <rect>
+        <x>-7</x>
+        <y>-4</y>
+        <width>291</width>
+        <height>221</height>
+       </rect>
+      </property>
+      <property name="plainText">
+       <string>
+
+   M.U.G.G.E. - Mostly unfinished genre grating engine
+</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QPushButton" name="pushButton_classify">
@@ -285,6 +404,9 @@ p, li { white-space: pre-wrap; }
     </property>
     <property name="text">
      <string>classify</string>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QDial" name="dial_volume">
@@ -331,6 +453,9 @@ p, li { white-space: pre-wrap; }
     </property>
     <property name="text">
      <string>classify</string>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_4">
