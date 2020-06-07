@@ -1,0 +1,32 @@
+Note to me:
+
+I need "clicked" function which works in that way (assuming all the packages like in test.py):
+
+def clicked(self, frame, func):
+""" frame which should be clicked, func = function that shall be executed """
+	If event.pos() within frame:                       # mouse press event in the right spot
+		If event.button() == Qt.LeftButton :           # left mouse button pressed down
+			If event.button() == Qt.LeftButton:        # left mouse button released again
+				func(*args, **kwargs)                  # calls the function and does something
+
+Maybe this can be done as a decorator or a classmethod??? How to use this? This will be the bridge to th actual programm. Func will be for example the "feed forward" function from the whole programm or just manipulates the activation state for the boxes
+
+maybe also look at the clicked method of buttons
+
+workflow:
+
+make sure that everything you imagine can be done with frames -> finish the look of the GUI -> 
+
+or just learn how to manipulate the appearance of buttons and then use buttons
+
+look for
+
+QPoint
+QGraphics
+
+https://wiki.qt.io/Qt_for_Python_Signals_and_Slots
+https://doc.qt.io/qtforpython/PySide2/QtWidgets/QWidget.html#PySide2.QtWidgets.QWidget
+https://doc.qt.io/qtforpython/api.html
+http://zetcode.com/gui/pyqt5/eventssignals/
+https://doc.qt.io/qt-5/qpoint.html
+https://www.programcreek.com/python/example/106689/PyQt5.QtGui.QMouseEvent
