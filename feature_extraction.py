@@ -137,7 +137,7 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
 # write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 5, "")
 #
 #  should take around 30 seconds.
-
+my_dataset_path = "C:/Users/JD/PycharmProjects/newstart/data_music"
 #  Prints out how long the program was running, in seconds.
 endtime = time.time()
 print("{:5.3f}s".format(endtime - starttime))
