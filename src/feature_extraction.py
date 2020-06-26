@@ -74,7 +74,7 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
     does_features_file_exist = os.path.isfile(features_file_name)
     does_dataset_path_exist = os.path.isdir(dataset_path)
     assert does_dataset_path_exist, "The  path 'dataset_path' cant be found."
-    assert not does_features_file_exist or overwrite in "Yes Append".split(), "Choose a new 'file-name', if you dont want to overwrite it."
+    assert not does_features_file_exist or overwrite in "yes y Yes Append".split(), "Choose a new 'file-name', if you dont want to overwrite it."
     c, s, z, m = 0, 0, 0, 0
     headline = "filename"
     if "chroma_stft" in featurelist:
@@ -97,10 +97,10 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
     else:
         append_data_to_file(features_file_name, headline.split(), "w")
     for genre in genrelist:
-        i = 0
         print(genre)  # shows the progress of the programm, while running. This line can be deleted, if not wanted.
-        for filename in os.listdir(f"{dataset_path}/{genre}"):
-            if i >= max_songs_per_genre:
+        genre_files = os.listdir(f"{dataset_path}/{genre}")
+        for filename in genre_files:
+            if genre_files.index(filename) >= max_songs_per_genre:
                 break
             songname = f"{dataset_path}/{genre}/{filename}"
             y, sr = librosa.load(songname, mono=True, duration=5)
@@ -120,7 +120,6 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
                     line_to_add += f" {np.mean(mfeat)}"
             line_to_add += f" {genre}"
             append_data_to_file(features_file_name, line_to_add.split(), "a")
-            i += 1
 
 
 #               -----Example----
@@ -132,7 +131,7 @@ featurelist = "chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
 # Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
 # features from 5 songs per genre:
 
-write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 5, "Yes")
+write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 3, "Yes")
 #
 #  should take around 30 seconds.
 

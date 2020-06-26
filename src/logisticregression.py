@@ -45,8 +45,8 @@ def firstaccuracytest(features_file_name):
     return sum / number
 
 
-features_file_name = "complete_data_4_features.csv"
-print("Average accuracy of Logistic Regression: " + str(firstaccuracytest(features_file_name) * 100) + "%")
+features_file_name = "new_data_file.csv"
+print(f'Average accuracy of Logistic Regression:  {firstaccuracytest(features_file_name) * 100}%')
 #
 
 # -----Result:----
