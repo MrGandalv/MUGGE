@@ -10,13 +10,13 @@ data = pd.read_csv("accuracy_overview.csv")
 
 accuracies = data.iloc[:, 3]
 
-LR_score = list()
-MLP_score = list()
-RF_score = list()
-SVML_score = list()
-SVMP_score = list()
-SVMR_score = list()
-SVMS_score = list()
+LR_score   = []
+MLP_score  = []
+RF_score   = []
+SVML_score = []
+SVMP_score = []
+SVMR_score = []
+SVMS_score = []
 for j in range(len(featurelist)):
     LR_score.append(round(accuracies[7 * j], 3))
     MLP_score.append(round(accuracies[7 * j + 1], 3))

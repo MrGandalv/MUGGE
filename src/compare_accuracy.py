@@ -35,7 +35,7 @@ def write_headline(acc_file_name):
 # followed by the computed average accuracy, the variance and also the whole list of the accuracies.
 #
 def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name, X, y, repetitions):
-    score_list = list()
+    score_list = []
     for i in range(repetitions):
         print(f"Step {i}")  # can be deleted, just shows the progress of the programm
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 * i + 666)
@@ -57,25 +57,34 @@ def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name
 # function, the 'repetitions' parameter comes into play, whichs role is explained above.
 #
 def compute_data(acc_file_name, features_file_name, repetitions):
+
+    #________________________ Data Preprocessing ___________________________________
+    
     data = pd.read_csv(features_file_name)
     data = data.drop(["filename"], axis=1)  # we dont need the column with the filenames anymore
+    
     genre_data = data.iloc[:, -1]  # the last column(genre)
     all_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
     chro_data = data.iloc[:, 0]  # only the first columnn (chroma_stft)
     spec_data = data.iloc[:, 1]  # only the second columnn (spectral_centroid)
     zero_data = data.iloc[:, 2]  # only the third columnn (zero_crossing_rate)
     mfcc_data = data.iloc[:, 3:23]  # only the last 20 columnns (mfcc)
+    
     encoder = LabelEncoder()
     y = encoder.fit_transform(genre_data)
     scaler = StandardScaler()
-    X_all = scaler.fit_transform(np.array(all_features_data, dtype=float))
-    X_chro = scaler.fit_transform(
-        np.array(chro_data, dtype=float).reshape(-1, 1))  # reshape is necessary for 1-column data
+    
+    X_all  = scaler.fit_transform(np.array(all_features_data, dtype=float))
+    X_chro = scaler.fit_transform(np.array(chro_data, dtype=float).reshape(-1, 1))  # reshape is necessary for 1-column data
     X_spec = scaler.fit_transform(np.array(spec_data, dtype=float).reshape(-1, 1))
     X_zero = scaler.fit_transform(np.array(zero_data, dtype=float).reshape(-1, 1))
     X_mfcc = scaler.fit_transform(np.array(mfcc_data, dtype=float))
+    
     feature_list = [[X_all, "all"], [X_chro, "chroma_stft"], [X_spec, "spectral_centroid"],
                     [X_zero, "zero_crossing_rate"], [X_mfcc, "mfcc"]]
+    
+    #______________________ Learning Initilization _____________________________________
+    
     lr = LogisticRegression()
     mlp = MLPClassifier(random_state=3)
     rf = RandomForestClassifier()
@@ -83,9 +92,12 @@ def compute_data(acc_file_name, features_file_name, repetitions):
     svmp = svm.SVC(kernel="poly")
     svmr = svm.SVC(kernel="rbf")
     svms = svm.SVC(kernel="sigmoid")
+    
     classifier_list = [[lr, "LogisticRegression"], [mlp, "MLPClassifier"], [rf, "RandomForestClassifier"],
                        [svml, "SupportVectorMachine(linear)"], [svmp, "SupportVectorMachine(poly)"],
                        [svmr, "SupportVectorMachine(rbf)"], [svms, "SupportVectorMachine(sigmoid)"]]
+
+    #________________________________ save ______________________________________________
 
     for X, feat_name in feature_list:
         for classifier, classifier_name in classifier_list:
