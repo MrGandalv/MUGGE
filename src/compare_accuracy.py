@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 import time
 
 #  Use the time module to measure how long the program is running.
-starttime = time.time()
+# starttime = time.time()
 
 
 # Use this function to write a headline for the (new) file 'acc_file_name'. Attention: an existing file with the same
@@ -106,15 +106,15 @@ def compute_data(acc_file_name, features_file_name, repetitions):
 
 # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
 # Here 25 repetitions (different train_test_splits) are used.
-features_file_name = "complete_data_4_features.csv"
-acc_file_name = "accuracy_overview.csv"
+# features_file_name = "complete_data_4_features.csv"
+# acc_file_name = "accuracy_overview.csv"
 
-write_headline(acc_file_name)
-compute_data(acc_file_name, features_file_name, 25)
+# write_headline(acc_file_name)
+# compute_data(acc_file_name, features_file_name, 25)
 
-# Could take some minutes.
+# # Could take some minutes.
 
 
-#  Prints out how long the program was running, in seconds.
-endtime = time.time()
-print("{:5.3f}s".format(endtime - starttime))
+# #  Prints out how long the program was running, in seconds.
+# endtime = time.time()
+# print("{:5.3f}s".format(endtime - starttime))

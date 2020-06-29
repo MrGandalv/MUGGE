@@ -44,12 +44,12 @@ import csv
 import time
 import warnings
 
-#  Suppress a weird Future warning, which is (hopefully) not important.
-warnings.filterwarnings('ignore')
+# #  Suppress a weird Future warning, which is (hopefully) not important.
+# warnings.filterwarnings('ignore')
 
-#  Use the time module to measure how long the program is running.
-#  First get the current time.
-starttime = time.time()
+# #  Use the time module to measure how long the program is running.
+# #  First get the current time.
+# starttime = time.time()
 
 
 def append_data_to_file(features_file_name, line_to_add, mode):
@@ -131,12 +131,12 @@ featurelist = "chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
 # Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
 # features from 5 songs per genre:
 
-write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 3, "Yes")
+# write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 3, "Yes")
 #
 #  should take around 30 seconds.
 
 #  Prints out how long the program was running, in seconds.
-endtime = time.time()
-print("{:5.3f}s".format(endtime - starttime))
+# endtime = time.time()
+# print("{:5.3f}s".format(endtime - starttime))
 
 #  main source: https://towardsdatascience.com/music-genre-classification-with-python-c714d032f0d8

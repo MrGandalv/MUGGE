@@ -34,12 +34,12 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
 
 
-#multiprocessing and multithreadining
+#multiprocessing and multithreading
 import concurrent.futures
 
 #other scripts
-import feature_extraction 
-import compare_accuracy
+from feature_extraction import append_data_to_file, write_feature_file 
+from compare_accuracy import write_accuracy_to_file, write_headline 
 
 #_____________________________________________________________________
 #                         CLASSES
@@ -48,10 +48,16 @@ import compare_accuracy
 class Box:
 	"""This class is the parent of all box-method-objects."""
 	
-	path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/short examples/examples for packages/tensorflow'
+	path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
 	#if not necessary here then move to input box
 	path_of_data  = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres' 
-	
+	#list of all features that are used
+	feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc"]
+	#list of all methods and boxes that are used
+	box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression']
+	#list of all genres
+	genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
+
 	def __init__(self, number):
 		"""defines the number of the box 1 - 7, where 6 referes to the decision box, 1 to the input box
 		and 7 is the output box"""
@@ -62,7 +68,7 @@ class Box:
 # ____________________________________ Method Boxes _________________________________________________________
 # all Method Boxes should contain a training-, test- and infer-method which alsways saves somehow the outcome
 
-class box_LogisticRegression(Box):
+class BoxLogisticRegression(Box):
 	"""Box that uses logistic regression for classifcation"""
 	
 	name = 'LogisticRegression'
@@ -70,6 +76,7 @@ class box_LogisticRegression(Box):
 	def __init__(self, number, mode):
 		"""mode must be a string"""
 		super().__init__(number)
+		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.mode = mode
 		self.model = LogisticRegression()
 
@@ -88,14 +95,15 @@ class box_LogisticRegression(Box):
 		#store outcome or view it or something like this
 		self.model.predict(data)
 
-class box_NN(Box):
+class BoxTfNN(Box):
 	"""if one needs a more suffisticated NN, this migh be useful, otherwise use the MLPClassifier"""
 	
 	name = 'TfNeuralNetwork'
 
-	def __init__(self, arch_box, number):
+	def __init__(self, number, arch_box):
 		
 		super().__init__(number)
+		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.creation_time_string = f'{time()}'[-6:-1] #only take the last 5 digits for the unique name
 		self.model = Sequential()
 		self.model.add(Flatten())
@@ -127,7 +135,7 @@ class box_NN(Box):
 		""" Place for the documentation """
 		print(np.argmax(self.model.predict(np.array([pic]))))
 
-class box_SupportVectorMachine(Box):
+class BoxSupportVectorMachine(Box):
 
 	name = 'SupportVectorMachine'
 
@@ -135,7 +143,7 @@ class box_SupportVectorMachine(Box):
 		"""mode is a string"""
 		super().__init__(number)
 		self.mode = mode #linear, poly, rbf, sigmoid
-		self.full_name = name+f'({self.mode})'
+		self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
 		self.model = svm.SVC(kernel=self.mode)
 
 	def train(self, training_data):
@@ -153,7 +161,7 @@ class box_SupportVectorMachine(Box):
 		#store outcome or view it or something like this
 		self.model.predict(data)
 
-class box_MLPClassifier(Box):
+class BoxMLPClassifier(Box):
 	"""the easy NN Box"""
 	
 	name = 'MLPClassifier'
@@ -161,6 +169,7 @@ class box_MLPClassifier(Box):
 	def __init__(self, number, arch):
 		"""arch is the architecure of the network"""
 		super().__init__(number)
+		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.arch = arch
 		self.model = MLPClassifier(random_state=3)
 
@@ -179,14 +188,15 @@ class box_MLPClassifier(Box):
 		#store outcome or view it or something like this
 		self.model.predict(data)
 
-class box_RandomForestClassifier(Box):
+class BoxRandomForestClassifier(Box):
 	""" Place for the documentation """
 
 	name = 'RandomForestClassifier'
 
 	def __init__(self, number, mode):
-		"""mode must be a string"""
+		""" mode must be a string """
 		super().__init__(number)
+		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.mode = mode
 		self.model = RandomForestClassifier()
 
@@ -207,13 +217,16 @@ class box_RandomForestClassifier(Box):
 
 # ____________________________________ Input Box _________________________________________________________
 
-class box_Input(Box):
-	"""load, clean and transform input data --> Claas - Playground"""
+class BoxInput(Box):
+	""" load, clean and transform input data --> Claas - Playground """
 
 	name = 'Input'
 
-	def __init__(self, number):
+	def __init__(self, number, path_to_load = None):
 		super().__init__(number)
+		self.Id = f'Box_{self.box_number}_{self.name}'
+		if not path_to_load == None:
+			self.path_of_data=path_to_load
 
 	@staticmethod
 	def flatten(data):
@@ -226,43 +239,48 @@ class box_Input(Box):
 			data_train.append([a for sample_row in sample for a in sample_row])
 		return np.array(data_train)
 
-	def get_features(self,features_file_name, dataset_path, genrelist, featurelist, max_songs_per_genre, overwrite):
+	def get_features(self, max_songs_per_genre, overwrite):
 		""" Place for the documentation """
 		#stuff before
 		#ask for all of the arguments
-		write_feature_file(features_file_name, dataset_path, genrelist, featurelist, max_songs_per_genre, overwrite)
+		self.features_file_name = f'{self.path_to_store}/features_file.csv'
+		write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names, max_songs_per_genre, overwrite)
 
-	def preprocess():
+	def preprocess(self):
 		""" WILL NOT WORK YET HAS TO BE ADJUSTED TO THE OOP-APPROACH """
-		data = pd.read_csv(features_file_name)
-	    data = data.drop(["filename"], axis=1)       # we dont need the column with the filenames anymore
-	    
-	    genre_data = data.iloc[:, -1]                # the last column(genre)
-	    all_features_data = data.iloc[:, :-1]        # every data except the last column(genre)
-	    chro_data = data.iloc[:, 0]                  # only the first columnn (chroma_stft)
-	    spec_data = data.iloc[:, 1]                  # only the second columnn (spectral_centroid)
-	    zero_data = data.iloc[:, 2]                  # only the third columnn (zero_crossing_rate)
-	    mfcc_data = data.iloc[:, 3:23]               # only the last 20 columnns (mfcc)
-	    
-	    encoder = LabelEncoder()
-	    y = encoder.fit_transform(genre_data)
-	    scaler = StandardScaler()
-	    
-	    X_all  = scaler.fit_transform(np.array(all_features_data, dtype=float))
-	    X_chro = scaler.fit_transform(np.array(chro_data, dtype=float).reshape(-1, 1))  # reshape is necessary for 1-column data
-	    X_spec = scaler.fit_transform(np.array(spec_data, dtype=float).reshape(-1, 1))
-	    X_zero = scaler.fit_transform(np.array(zero_data, dtype=float).reshape(-1, 1))
-	    X_mfcc = scaler.fit_transform(np.array(mfcc_data, dtype=float))
+		data = pd.read_csv(self.features_file_name)
+		# we dont need the column with the filenames anymore
+		data = data.drop(["filename"], axis=1)
 
-	    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 * i + 666)
+		feature_data = []
 
-	    feature_list = [[X_all, "all"], [X_chro, "chroma_stft"], [X_spec, "spectral_centroid"],
-	                    [X_zero, "zero_crossing_rate"], [X_mfcc, "mfcc"]]
+		# genre
+		feature_data.append(np.array(data.iloc[:, -1]))
+		# every data except the last column(genre)                  
+		feature_data.append(np.array(data.iloc[:, :-1]))
+		# only the first columnn (chroma_stft)                
+		feature_data.append(np.array(data.iloc[:, 0]).reshape(-1,1))  
+		# only the second columnn (spectral_centroid)  
+		feature_data.append(np.array(data.iloc[:, 1]).reshape(-1,1))
+		# only the third columnn (zero_crossing_rate)     
+		feature_data.append(np.array(data.iloc[:, 2]).reshape(-1,1))
+		# only the last 20 columnns (mfcc)     
+		feature_data.append(np.array(data.iloc[:, 3:23]))                
+
+		encoder = LabelEncoder()
+		y = encoder.fit_transform(feature_data[0])
+		scaler = StandardScaler()
+
+		X = [scaler.fit_transform(data) for data in feature_data[1:]]
+		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42  + 666) #kommt doch ins training!	    
+		feature_list  = [k for k in zip(X, feature_names)]
+
+		return X_train, X_test, y_train, y_test, feature_list
 
 
 # ____________________________________ Decision Box _________________________________________________________
 
-class Box_Decision(Box):
+class BoxDecision(Box):
 	""" Place for the documentation """
 
 	name = 'Decision'
@@ -270,7 +288,12 @@ class Box_Decision(Box):
 	def __init__(self, number, method):
 		""" method needs to be a string """
 		super().__init__(number)
+		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.method = method
+
+	def max(self, data):
+		"""chooses the preiction with the highest percentage"""
+		return np.max(data[0])
 
 
 
@@ -283,14 +306,23 @@ class Box_Decision(Box):
 
 
 
+
 #_____________________________________________________________________
 #                            MAIN
 #_____________________________________________________________________
 
 def main():
 	""" Place for the documentation """
+	Programm = [BoxInput(1), BoxLogisticRegression(2, 'hardcore'), BoxDecision(6, 'max')]
+	Programm[0].get_features(3, 'y')
+	X_train, X_test, y_train, y_test, feature_list = Programm[0].preprocess()
+	# print(X_train) 
+	# print(X_test)
+	# print(y_train) 
+	# print(y_test)
+	# print(feature_list)
+	Programm[1].train(X_train, y_train)
 
-	pass
 
 if __name__ == '__main__':
 	main()
