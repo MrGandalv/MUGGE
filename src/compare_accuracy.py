@@ -106,11 +106,11 @@ def compute_data(acc_file_name, features_file_name, repetitions):
 
 # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
 # Here 25 repetitions (different train_test_splits) are used.
-# features_file_name = "complete_data_4_features.csv"
-# acc_file_name = "accuracy_overview.csv"
+features_file_name = "complete_data_4_features.csv"
+acc_file_name = "accuracy_overview.csv"
 
-# write_headline(acc_file_name)
-# compute_data(acc_file_name, features_file_name, 25)
+write_headline(acc_file_name)
+compute_data(acc_file_name, features_file_name, 25)
 
 # # Could take some minutes.
 

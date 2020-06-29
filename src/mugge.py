@@ -8,17 +8,13 @@
 import pandas as pd
 import numpy as np
 import os
-import os.path
 import matplotlib.pyplot as plt
 
 import librosa
 
-import csv
-import time as tm 
-from time import time
-import warnings
+from functools import reduce # only in Python 3
+import time
 import pickle
-
 
 # machine learning relevant packages
 
@@ -38,8 +34,8 @@ from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D,
 import concurrent.futures
 
 #other scripts
-from feature_extraction import append_data_to_file, write_feature_file 
-from compare_accuracy import write_accuracy_to_file, write_headline 
+from feature_extraction import write_feature_file 
+# from compare_accuracy import write_accuracy_to_file, write_headline 
 
 #_____________________________________________________________________
 #                         CLASSES
@@ -63,6 +59,28 @@ class Box:
 		and 7 is the output box"""
 		self.box_number = number 
 
+	def save_model(self, save_model_name):
+		"""it will check your current directory and creates te desired folders in this directory
+		save_model_name contains the folder that needs to be created and the filename.pkl as one string"""
+		name_model_file = save_model_name.split('/')[-1]
+		folder_path = save_model_name.replace(f'/{name_model_file}','')
+
+		cwd = os.getcwd()
+		if cwd == self.path_to_store:
+		    if not os.path.isdir(cwd+folder_path):
+		        os.mkdir(cwd+folder_path)
+		    os.chdir(os.getcwd()+folder_path)
+		    with open(name_model_file, 'wb') as file:
+		    	pickle.dump(self.model, file)
+		else:
+		    os.chdir(self.path_to_store)
+		    if not os.path.isdir(cwd+folder_path):
+		        os.mkdir(cwd+folder_path)
+		    os.chdir(os.getcwd()+folder_path)
+		    with open(name_model_file, 'wb') as file:
+		    	pickle.dump(self.model, file)
+		os.chdir(cwd)
+
 
 
 # ____________________________________ Method Boxes _________________________________________________________
@@ -72,28 +90,34 @@ class BoxLogisticRegression(Box):
 	"""Box that uses logistic regression for classifcation"""
 	
 	name = 'LogisticRegression'
-	
 	def __init__(self, number, mode):
 		"""mode must be a string"""
 		super().__init__(number)
 		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.mode = mode
-		self.model = LogisticRegression()
+		self.model = LogisticRegression()		
 
 	def train(self, training_data):
 		""" Place for the documentation """
+		feature_list, y  = training_data
+		for X, feature in feature_list:
+			X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+			self.model.fit(X_train, y_train)
 
-		self.model.fit(training_data)
+			#gives a string in the form of 'yyyymonthdayhourminutesecond', where anything else than year will be one or two digits
+			time_stamp = reduce(lambda x,y : x+y, [f'{t}' for t in time.localtime(time.time())[:-3]]) 
+			save_model_name = f'/model_{self.Id}/{feature}_{time_stamp}.pkl'
+			self.save_model(save_model_name)
 
-	def test(self, test_data):
+	def test(self, test_data, create_file = False):
 		""" Place for the documentation """
 		#store score
-		self.model.score(test_data)
+		return self.model.score(test_data)
 
-	def classify(self, data):
+	def classify(self, data, create_file = False):
 		""" Place for the documentation """
 		#store outcome or view it or something like this
-		self.model.predict(data)
+		return self.model.predict(data)
 
 class BoxTfNN(Box):
 	"""if one needs a more suffisticated NN, this migh be useful, otherwise use the MLPClassifier"""
@@ -104,7 +128,7 @@ class BoxTfNN(Box):
 		
 		super().__init__(number)
 		self.Id = f'Box_{self.box_number}_{self.name}'
-		self.creation_time_string = f'{time()}'[-6:-1] #only take the last 5 digits for the unique name
+		self.creation_time_string = f'{time.time()}'[-6:-1] #only take the last 5 digits for the unique name
 		self.model = Sequential()
 		self.model.add(Flatten())
 		for k in arch_box:
@@ -154,12 +178,12 @@ class BoxSupportVectorMachine(Box):
 	def test(self, test_data):
 		""" Place for the documentation """
 		#store score
-		self.model.score(test_data)
+		return self.model.score(test_data)
 
 	def classify(self, data):
 		""" Place for the documentation """
 		#store outcome or view it or something like this
-		self.model.predict(data)
+		return self.model.predict(data)
 
 class BoxMLPClassifier(Box):
 	"""the easy NN Box"""
@@ -181,12 +205,12 @@ class BoxMLPClassifier(Box):
 	def test(self, test_data):
 		""" Place for the documentation """
 		#store score
-		self.model.score(test_data)
+		return self.model.score(test_data)
 
 	def classify(self, data):
 		""" Place for the documentation """
 		#store outcome or view it or something like this
-		self.model.predict(data)
+		return self.model.predict(data)
 
 class BoxRandomForestClassifier(Box):
 	""" Place for the documentation """
@@ -203,17 +227,20 @@ class BoxRandomForestClassifier(Box):
 	def train(self, training_data):
 		""" Place for the documentation """
 		#store weights
-		self.model.fit(training_data)
+		X, y  = training_data
+		for part in X:
+			X_train, X_test, y_train, y_test = train_test_split(part, y, test_size=0.2, random_state=42  + 666)
+		self.model.fit(X_train, y_train)
 
 	def test(self, test_data):
 		""" Place for the documentation """
 		#store score
-		self.model.score(test_data)
+		return self.model.score(test_data)
 
 	def classify(self, data):
 		""" Place for the documentation """
 		#store outcome or view it or something like this
-		self.model.predict(data)
+		return self.model.predict(data)
 
 # ____________________________________ Input Box _________________________________________________________
 
@@ -271,11 +298,10 @@ class BoxInput(Box):
 		y = encoder.fit_transform(feature_data[0])
 		scaler = StandardScaler()
 
-		X = [scaler.fit_transform(data) for data in feature_data[1:]]
-		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42  + 666) #kommt doch ins training!	    
-		feature_list  = [k for k in zip(X, feature_names)]
+		X = [scaler.fit_transform(data) for data in feature_data[1:]]    
+		feature_list  = [k for k in zip(X, self.feature_names)]
 
-		return X_train, X_test, y_train, y_test, feature_list
+		return X, y, feature_list
 
 
 # ____________________________________ Decision Box _________________________________________________________
@@ -305,8 +331,6 @@ class BoxDecision(Box):
 
 
 
-
-
 #_____________________________________________________________________
 #                            MAIN
 #_____________________________________________________________________
@@ -314,14 +338,15 @@ class BoxDecision(Box):
 def main():
 	""" Place for the documentation """
 	Programm = [BoxInput(1), BoxLogisticRegression(2, 'hardcore'), BoxDecision(6, 'max')]
-	Programm[0].get_features(3, 'y')
-	X_train, X_test, y_train, y_test, feature_list = Programm[0].preprocess()
+	Programm[0].get_features(5, 'y')
+	X, y, feature_list = Programm[0].preprocess()
 	# print(X_train) 
 	# print(X_test)
 	# print(y_train) 
 	# print(y_test)
 	# print(feature_list)
-	Programm[1].train(X_train, y_train)
+
+	Programm[1].train([feature_list, y])
 
 
 if __name__ == '__main__':

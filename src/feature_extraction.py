@@ -36,6 +36,7 @@
 
 import numpy as np
 import librosa
+import pandas as pd 
 
 import os
 import os.path
@@ -45,7 +46,7 @@ import time
 import warnings
 
 # #  Suppress a weird Future warning, which is (hopefully) not important.
-# warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore')
 
 # #  Use the time module to measure how long the program is running.
 # #  First get the current time.
@@ -70,63 +71,70 @@ def append_data_to_file(features_file_name, line_to_add, mode):
         writer.writerow(line_to_add)
 
 
-def write_feature_file(features_file_name, dataset_path, genrelist, featurelist, max_songs_per_genre, overwrite):
-    does_features_file_exist = os.path.isfile(features_file_name)
-    does_dataset_path_exist = os.path.isdir(dataset_path)
-    assert does_dataset_path_exist, "The  path 'dataset_path' cant be found."
-    assert not does_features_file_exist or overwrite in "yes y Yes Append".split(), "Choose a new 'file-name', if you dont want to overwrite it."
-    c, s, z, m = 0, 0, 0, 0
-    headline = "filename"
-    if "chroma_stft" in featurelist:
-        c = 1
-        headline += " chroma_stft"
-    if "spectral_centroid" in featurelist:
-        s = 1
-        headline += " spectral_centroid"
-    if "zero_crossing_rate" in featurelist:
-        z = 1
-        headline += " zero_crossing_rate"
-    if "mfcc" in featurelist:
-        m = 1
-        for i in range(1, 21):  # remember: the mfcc feature consists of 20 different features
-            headline += f" mfcc{i}"
-    headline += " label"
-    assert max(c, s, z, m) > 0, "There are no supported features given in 'featurelist'."
-    if overwrite == "Append":
-        assert does_features_file_exist, "Attention: Append not possible, because 'features_file_name' cant be found. "
-    else:
-        append_data_to_file(features_file_name, headline.split(), "w")
-    for genre in genrelist:
-        print(genre)  # shows the progress of the programm, while running. This line can be deleted, if not wanted.
-        genre_files = os.listdir(f"{dataset_path}/{genre}")
-        for filename in genre_files:
-            if genre_files.index(filename) >= max_songs_per_genre:
-                break
-            songname = f"{dataset_path}/{genre}/{filename}"
-            y, sr = librosa.load(songname, mono=True, duration=5)
-            line_to_add = f"{filename}"
-            if c == 1:
-                c_s = librosa.feature.chroma_stft(y=y, sr=sr)
-                line_to_add += f" {np.mean(c_s)}"
-            if s == 1:
-                s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
-                line_to_add += f" {np.mean(s_c)}"
-            if z == 1:
-                z_c_r = librosa.feature.zero_crossing_rate(y)
-                line_to_add += f" {np.mean(z_c_r)}"
-            if m == 1:
-                mfcc = librosa.feature.mfcc(y=y, sr=sr)
-                for mfeat in mfcc:
-                    line_to_add += f" {np.mean(mfeat)}"
-            line_to_add += f" {genre}"
-            append_data_to_file(features_file_name, line_to_add.split(), "a")
+def write_feature_file(features_file_path, dataset_path, genrelist, featurelist, max_songs_per_genre, overwrite):
+  does_features_file_exist = os.path.isfile(features_file_path)
+  does_dataset_path_exist = os.path.isdir(dataset_path)
+  assert features_file_path.endswith(".csv"), "The file 'features_file_path' must be a .csv file."
+  assert does_dataset_path_exist, "The path 'dataset_path' can't be found."
+  assert not does_features_file_exist or overwrite in "yes y Yes Append".split(' '), "Choose a new 'file-name', if you dont want to overwrite it."
+  c, s, z, m = 0, 0, 0, 0
+  headline = "filename"
+  if "chroma_stft" in featurelist:
+      c = 1
+      headline += " chroma_stft"
+  if "spectral_centroid" in featurelist:
+      s = 1
+      headline += " spectral_centroid"
+  if "zero_crossing_rate" in featurelist:
+      z = 1
+      headline += " zero_crossing_rate"
+  if "mfcc" in featurelist:
+      m = 1
+      for i in range(1, 21):  # remember: the mfcc feature consists of 20 different features
+          headline += f" mfcc{i}"
+  headline += " label"
+  headline = headline.split(' ')
+  assert max(c, s, z, m) > 0, "There are no supported features given in 'featurelist'."
+  if overwrite == "Append":
+    assert does_features_file_exist, "Attention: Append not possible, because 'features_file_path' can't be found."
+    df_feature = pd.read_csv(features_file_path)
+  else:
+    df_feature = pd.DataFrame(columns=headline)
+    # df_feature.to_csv(features_file_path, index=False) 
+  for genre in genrelist:
+    print(genre)  # shows the progress of the programm, while running. This line can be deleted, if not wanted.
+    genre_files = os.listdir(f"{dataset_path}/{genre}")
+    for filename in genre_files:
+        if genre_files.index(filename) >= max_songs_per_genre:
+            break
+        songname = f"{dataset_path}/{genre}/{filename}"
+        y, sr = librosa.load(songname, mono=True, duration=5)
+        line_to_add = f"{filename}"
+        if c == 1:
+            c_s = librosa.feature.chroma_stft(y=y, sr=sr)
+            line_to_add += f" {np.mean(c_s)}"
+        if s == 1:
+            s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
+            line_to_add += f" {np.mean(s_c)}"
+        if z == 1:
+            z_c_r = librosa.feature.zero_crossing_rate(y)
+            line_to_add += f" {np.mean(z_c_r)}"
+        if m == 1:
+            mfcc = librosa.feature.mfcc(y=y, sr=sr)
+            for mfeat in mfcc:
+                line_to_add += f" {np.mean(mfeat)}"
+        line_to_add += f" {genre}"
+        df_feature = df_feature.append(pd.DataFrame([line_to_add.split(' ')], columns=headline))
+        # append_data_to_file(features_file_path, line_to_add.split(' '), "a")
+  df_feature = df_feature.set_index('filename')
+  df_feature.to_csv(features_file_path)
 
 
-#               -----Example----
-features_file_name = "new_data_file.csv"
-my_dataset_path = "C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres"
-genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split()
-featurelist = "chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
+# #               -----Example----
+# features_file_name = "new_data_file.csv"
+# my_dataset_path = "C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres"
+# genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split()
+# featurelist = "chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
 
 # Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
 # features from 5 songs per genre:
