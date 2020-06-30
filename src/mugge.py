@@ -54,34 +54,147 @@ class Box:
 	#list of all genres
 	genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
 
+	current_feature_the_model_is_trained_for = ''
 	def __init__(self, number):
 		"""defines the number of the box 1 - 7, where 6 referes to the decision box, 1 to the input box
 		and 7 is the output box"""
 		self.box_number = number 
 
-	def save_model(self, save_model_name):
+	def get_features(self, max_songs_per_genre, overwrite): #needs to be here because of classify
+		""" Place for the documentation """
+		#stuff before
+		#ask for all of the arguments
+		self.features_file_name = f'{self.path_to_store}/features_file.csv'
+		write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names, max_songs_per_genre, overwrite)
+
+	@property
+	def time_stamp(self):
+		"""gives a string in the form of 'yyyymonthdayhourminutesecond', where anything else than year will be one or two digits"""
+		return reduce(lambda x,y : x+y, [f'{t}' for t in time.localtime(time.time())[:-3]]) 
+
+
+	def save_to_file(self, data, save_model_name, mode = 'pickle'):
 		"""it will check your current directory and creates te desired folders in this directory
-		save_model_name contains the folder that needs to be created and the filename.pkl as one string"""
+		save_model_name contains the folder that needs to be created and the filename.pkl as one string
+
+		we check the current working directory just for the case when the cwd is not where the wants to store the data"""
 		name_model_file = save_model_name.split('/')[-1]
 		folder_path = save_model_name.replace(f'/{name_model_file}','')
 
-		cwd = os.getcwd()
+		cwd = os.getcwd() 
 		if cwd == self.path_to_store:
 		    if not os.path.isdir(cwd+folder_path):
 		        os.mkdir(cwd+folder_path)
 		    os.chdir(os.getcwd()+folder_path)
-		    with open(name_model_file, 'wb') as file:
-		    	pickle.dump(self.model, file)
+		    if mode == 'pickle':
+			    with open(name_model_file, 'wb') as file:
+			    	pickle.dump(data, file)
+		    elif mode == 'csv':
+		    	df = pd.DataFrame(data[0], columns=data[1]) #in this case expect data to have columns and actual data
+		    	df.to_csv(name_model_file, index=False)
 		else:
 		    os.chdir(self.path_to_store)
 		    if not os.path.isdir(cwd+folder_path):
 		        os.mkdir(cwd+folder_path)
 		    os.chdir(os.getcwd()+folder_path)
-		    with open(name_model_file, 'wb') as file:
-		    	pickle.dump(self.model, file)
+		    if mode == 'pickle':
+		    	with open(name_model_file, 'wb') as file:
+			    	pickle.dump(data, file)
+		    elif mode == 'csv':
+		    	df = pd.DataFrame(data[0], columns=data[1])  #in this case expect data to have columns and actual data
+		    	df.to_csv(name_model_file, index=False)
+
 		os.chdir(cwd)
 
+	def train(self, training_data, repetitions=1):
+		""" Place for the documentation """
+		feature_list, y  = training_data
+		for epoch in range(repetitions):
+			for X, feature in feature_list:
+				print(f'Epoch: {epoch+1}, feature: {feature}')
+				X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+				self.model.fit(X_train, y_train)
+				num_of_music_files = len(X)
+				save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch+1}_{self.time_stamp}.pkl'
+				self.save_to_file(self.model, save_model_name, mode = 'pickle')
+				self.load_model_files = [feature] 
 
+	def test(self, test_data, create_file = False, load_model_files=[]):
+		""" load_model_files is a list of all the models that should be tested 
+		by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
+		if a file-name-string is provided (one or many) then it will load the models (one after the other) and test them
+		if create_file = True the score will be saved in a separate score-folder with the name of the box-Id in the folder that
+		was assigned by the user at the begining of the programm"""
+		if len(load_model_files)==0:
+			load_model_files = self.load_model_files 
+		
+		score_list = []
+		for file in load_model_files:
+			if os.path.isfile(file):
+				assert file.endswith('.pkl'), 'Needs to be a .pkl-file'
+				with open(file, 'rb') as f:
+					self.model = pickle.load(f)
+			start = file.split('/')[-1].split('_')[0] #the feature of the loaded model
+			feature_list, y  = test_data
+			
+			for X, feature in feature_list:
+				if feature.split('_')[0] == start:      #this is fine since the number of feature will never be large
+					print(feature)
+					X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+					# print('y_test: ', len(y_test), np.shape(y_test))
+					score_list.append(self.model.score(X_test, y_test))
+		print(score_list)
+
+		if create_file == True:
+			save_model_name = f'/score_{self.Id}/{self.time_stamp}.csv'
+			self.save_to_file([[score_list], np.array(feature_list)[:,1]], save_model_name, mode='csv')
+
+	def classify(self, music_file, feature='all', create_file = False, model_file=' '):
+		""" This should take a music file as data to predict its genre 
+		need to give him the feature you want it to predict from
+		model_file is a list of all the models that should be tested 
+		by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
+
+		stores the feature file in the current working directory and deletes it in the end (except the user stored it before
+		somewhere else) because otherwise we will just fill our cwd with useless feature files"""
+		
+		#extracting the features from the music file
+		y, sr = librosa.load(music_file, mono=True, duration=5)
+		feature_list = []
+		if feature == 'chroma_stft' or feature == 'all':
+			c_s = librosa.feature.chroma_stft(y=y, sr=sr)
+			feature_list.append(np.mean(c_s))
+		if feature == 'spectral_centroid' or feature == 'all':
+			s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
+			feature_list.append(np.mean(s_c))
+		if feature == 'zero_crossing_rate' or feature == 'all':
+			z_c_r = librosa.feature.zero_crossing_rate(y)
+			feature_list.append(np.mean(z_c_r))
+		if feature == 'mfcc' or feature == 'all':
+			mfcc = librosa.feature.mfcc(y=y, sr=sr)
+			for mfeat in mfcc:
+				feature_list.append(np.mean(mfeat))
+
+        #now load the model for the given feature
+		if not os.path.isfile(model_file):
+			#for the run with all music files in the dataset and 10 epochs
+			model_file = self.path_to_store+'/'+'model_'+self.Id+'/'+feature+'_for_999_files_10_2020630212932.pkl'
+			
+		assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
+		with open(model_file, 'rb') as f:
+			self.model = pickle.load(f)
+		
+		#predict
+		prediction = self.model.predict([feature_list])
+
+		#save the prediction
+		if create_file == True:
+			music_name = music_file.split('/')[-1]
+			prediction_list = [music_name, feature, self.genrelist[prediction[0]], prediction[0]]
+			save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
+			self.save_to_file([[prediction_list], ['file name', 'feature', 'decision', 'argmax of prediction']], save_model_name, mode='csv')
+
+		return prediction, self.genrelist[prediction[0]]
 
 # ____________________________________ Method Boxes _________________________________________________________
 # all Method Boxes should contain a training-, test- and infer-method which alsways saves somehow the outcome
@@ -90,6 +203,7 @@ class BoxLogisticRegression(Box):
 	"""Box that uses logistic regression for classifcation"""
 	
 	name = 'LogisticRegression'
+
 	def __init__(self, number, mode):
 		"""mode must be a string"""
 		super().__init__(number)
@@ -97,27 +211,7 @@ class BoxLogisticRegression(Box):
 		self.mode = mode
 		self.model = LogisticRegression()		
 
-	def train(self, training_data):
-		""" Place for the documentation """
-		feature_list, y  = training_data
-		for X, feature in feature_list:
-			X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
-			self.model.fit(X_train, y_train)
-
-			#gives a string in the form of 'yyyymonthdayhourminutesecond', where anything else than year will be one or two digits
-			time_stamp = reduce(lambda x,y : x+y, [f'{t}' for t in time.localtime(time.time())[:-3]]) 
-			save_model_name = f'/model_{self.Id}/{feature}_{time_stamp}.pkl'
-			self.save_model(save_model_name)
-
-	def test(self, test_data, create_file = False):
-		""" Place for the documentation """
-		#store score
-		return self.model.score(test_data)
-
-	def classify(self, data, create_file = False):
-		""" Place for the documentation """
-		#store outcome or view it or something like this
-		return self.model.predict(data)
+	
 
 class BoxTfNN(Box):
 	"""if one needs a more suffisticated NN, this migh be useful, otherwise use the MLPClassifier"""
@@ -170,21 +264,6 @@ class BoxSupportVectorMachine(Box):
 		self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
 		self.model = svm.SVC(kernel=self.mode)
 
-	def train(self, training_data):
-		""" Place for the documentation """
-		#store weights
-		self.model.fit(training_data)
-
-	def test(self, test_data):
-		""" Place for the documentation """
-		#store score
-		return self.model.score(test_data)
-
-	def classify(self, data):
-		""" Place for the documentation """
-		#store outcome or view it or something like this
-		return self.model.predict(data)
-
 class BoxMLPClassifier(Box):
 	"""the easy NN Box"""
 	
@@ -197,21 +276,6 @@ class BoxMLPClassifier(Box):
 		self.arch = arch
 		self.model = MLPClassifier(random_state=3)
 
-	def train(self, training_data):
-		""" Place for the documentation """
-		#store weights
-		self.model.fit(training_data)
-
-	def test(self, test_data):
-		""" Place for the documentation """
-		#store score
-		return self.model.score(test_data)
-
-	def classify(self, data):
-		""" Place for the documentation """
-		#store outcome or view it or something like this
-		return self.model.predict(data)
-
 class BoxRandomForestClassifier(Box):
 	""" Place for the documentation """
 
@@ -223,24 +287,6 @@ class BoxRandomForestClassifier(Box):
 		self.Id = f'Box_{self.box_number}_{self.name}'
 		self.mode = mode
 		self.model = RandomForestClassifier()
-
-	def train(self, training_data):
-		""" Place for the documentation """
-		#store weights
-		X, y  = training_data
-		for part in X:
-			X_train, X_test, y_train, y_test = train_test_split(part, y, test_size=0.2, random_state=42  + 666)
-		self.model.fit(X_train, y_train)
-
-	def test(self, test_data):
-		""" Place for the documentation """
-		#store score
-		return self.model.score(test_data)
-
-	def classify(self, data):
-		""" Place for the documentation """
-		#store outcome or view it or something like this
-		return self.model.predict(data)
 
 # ____________________________________ Input Box _________________________________________________________
 
@@ -266,16 +312,12 @@ class BoxInput(Box):
 			data_train.append([a for sample_row in sample for a in sample_row])
 		return np.array(data_train)
 
-	def get_features(self, max_songs_per_genre, overwrite):
-		""" Place for the documentation """
-		#stuff before
-		#ask for all of the arguments
-		self.features_file_name = f'{self.path_to_store}/features_file.csv'
-		write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names, max_songs_per_genre, overwrite)
-
-	def preprocess(self):
+	def preprocess(self, feature_data_file = ' '):
 		""" WILL NOT WORK YET HAS TO BE ADJUSTED TO THE OOP-APPROACH """
-		data = pd.read_csv(self.features_file_name)
+		if os.path.isfile(feature_data_file):
+			data = pd.read_csv(feature_data_file)
+		else:
+			data = pd.read_csv(self.features_file_name)
 		# we dont need the column with the filenames anymore
 		data = data.drop(["filename"], axis=1)
 
@@ -338,16 +380,26 @@ class BoxDecision(Box):
 def main():
 	""" Place for the documentation """
 	Programm = [BoxInput(1), BoxLogisticRegression(2, 'hardcore'), BoxDecision(6, 'max')]
-	Programm[0].get_features(5, 'y')
-	X, y, feature_list = Programm[0].preprocess()
+	# Programm[0].get_features(50, 'y')
+	X, y, feature_list = Programm[0].preprocess(feature_data_file = Programm[0].path_to_store+'/complete_data_4_features.csv')
 	# print(X_train) 
 	# print(X_test)
 	# print(y_train) 
 	# print(y_test)
 	# print(feature_list)
+	files = ['C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
+			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
+			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
+			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
+			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
+	# Programm[1].train([feature_list, y], repetitions=10)
+	Programm[1].test([feature_list, y], create_file = True, load_model_files=files)
 
-	Programm[1].train([feature_list, y])
+	music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
 
+	prediction, decision = Programm[1].classify(music_file, create_file=True)
+	print(prediction)
+	print(decision)
 
 if __name__ == '__main__':
 	main()
