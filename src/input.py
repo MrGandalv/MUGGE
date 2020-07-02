@@ -30,6 +30,6 @@ def record():
     sd.wait()  # Wait until recording is finished
     print("Recording terminated")
     write('output.wav', fs, myrecording)  # Save as WAV file
-    my_new = conv.wav_to_array_file('output.wav')  # get NumPy array"
+    my_new = conv.wav_to_array_rec('output.wav')  # get NumPy array"
 
     return my_new
