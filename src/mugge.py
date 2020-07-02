@@ -7,6 +7,7 @@
 #standard packages
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 import os
 import matplotlib.pyplot as plt
 
@@ -103,9 +104,9 @@ class Box:
 		""" Place for the documentation """
 		feature_list, y = training_data
 		self.saved_model_files = {}
-		for epoch in range(repetitions):
+		for epoch in tqdm(range(repetitions)):
 			for X, feature in feature_list:
-				print(f'Epoch: {epoch+1}, feature: {feature}')
+				# print(f'Epoch: {epoch+1}, feature: {feature}')
 				X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
 				self.model.fit(X_train, y_train)
 				num_of_music_files = len(X)
@@ -325,8 +326,10 @@ class BoxInput(Box):
 
 		# genre
 		feature_data.append(np.array(data.iloc[:, -1]))
+		
 		# every data except the last column(genre)                  
 		feature_data.append(np.array(data.iloc[:, :-1]))
+		
 		# only the first columnn (chroma_stft)                
 		feature_data.append(np.array(data.iloc[:, 0]).reshape(-1,1))  
 		# only the second columnn (spectral_centroid)  
@@ -403,11 +406,11 @@ def main():
 			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 	
 	for Box in Programm[1:-1]:
+		print(' ')
+		print(f'Training of {Box.Id}')
 		Box.train([feature_list, y], repetitions=10)
 		print(Box.test([feature_list, y]))
-		prediction, decision = Box.classify(music_file, create_file=True)
-		print(prediction)
-		print(decision)
+		print(Box.classify(music_file, create_file=True))
 
 if __name__ == '__main__':
 	main()
