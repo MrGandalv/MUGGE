@@ -50,7 +50,7 @@ class Box:
 	#list of all features that are used
 	feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc"]
 	#list of all methods and boxes that are used
-	box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression']
+	box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression', 'SupportVectorMachine']
 	#list of all genres
 	genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
 
@@ -59,13 +59,6 @@ class Box:
 		"""defines the number of the box 1 - 7, where 6 referes to the decision box, 1 to the input box
 		and 7 is the output box"""
 		self.box_number = number 
-
-	def get_features(self, max_songs_per_genre, overwrite): #needs to be here because of classify
-		""" Place for the documentation """
-		#stuff before
-		#ask for all of the arguments
-		self.features_file_name = f'{self.path_to_store}/features_file.csv'
-		write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names, max_songs_per_genre, overwrite)
 
 	@property
 	def time_stamp(self):
@@ -108,7 +101,8 @@ class Box:
 
 	def train(self, training_data, repetitions=1):
 		""" Place for the documentation """
-		feature_list, y  = training_data
+		feature_list, y = training_data
+		self.saved_model_files = {}
 		for epoch in range(repetitions):
 			for X, feature in feature_list:
 				print(f'Epoch: {epoch+1}, feature: {feature}')
@@ -116,45 +110,42 @@ class Box:
 				self.model.fit(X_train, y_train)
 				num_of_music_files = len(X)
 				save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch+1}_{self.time_stamp}.pkl'
+				self.saved_model_files.update({feature : save_model_name})
 				self.save_to_file(self.model, save_model_name, mode = 'pickle')
-				self.load_model_files = [feature] 
+		# print(self.saved_model_files)
 
-	def test(self, test_data, create_file = False, load_model_files=[]):
-		""" load_model_files is a list of all the models that should be tested 
+	def test(self, test_data, feature='all', load_model_file=''):
+		""" load_model_file is a list of all the models that should be tested 
 		by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
 		if a file-name-string is provided (one or many) then it will load the models (one after the other) and test them
 		if create_file = True the score will be saved in a separate score-folder with the name of the box-Id in the folder that
 		was assigned by the user at the begining of the programm"""
-		if len(load_model_files)==0:
-			load_model_files = self.load_model_files 
-		
-		score_list = []
-		for file in load_model_files:
-			if os.path.isfile(file):
-				assert file.endswith('.pkl'), 'Needs to be a .pkl-file'
-				with open(file, 'rb') as f:
-					self.model = pickle.load(f)
-			start = file.split('/')[-1].split('_')[0] #the feature of the loaded model
-			feature_list, y  = test_data
-			
-			for X, feature in feature_list:
-				if feature.split('_')[0] == start:      #this is fine since the number of feature will never be large
-					print(feature)
-					X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
-					# print('y_test: ', len(y_test), np.shape(y_test))
-					score_list.append(self.model.score(X_test, y_test))
-		print(score_list)
 
-		if create_file == True:
-			save_model_name = f'/score_{self.Id}/{self.time_stamp}.csv'
-			self.save_to_file([[score_list], np.array(feature_list)[:,1]], save_model_name, mode='csv')
+		if not os.path.isfile(load_model_file):
+			try:
+				load_model_file = self.path_to_store+self.saved_model_files[feature]
+			except:
+				load_model_file = self.path_to_store+'/'+'Backups'+'/'+'model_Backup_'+self.name+'/'+feature+'_for_999_files_10.pkl'
+		else:
+			feature = load_model_file.split('/')[-1].split('_')[0] #the feature of the loaded model
+		
+		feature_list, y  = test_data
+		feature_list = {i : k for (k,i) in feature_list} #convert it to a dictionary in order to access it easier
+		X = feature_list[feature]
+
+		assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
+		
+		with open(load_model_file, 'rb') as f:
+			self.model = pickle.load(f)
+		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+		return self.model.score(X_test, y_test), feature
 
 	def classify(self, music_file, feature='all', create_file = False, model_file=' '):
 		""" This should take a music file as data to predict its genre 
 		need to give him the feature you want it to predict from
 		model_file is a list of all the models that should be tested 
 		by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
-
+	
 		stores the feature file in the current working directory and deletes it in the end (except the user stored it before
 		somewhere else) because otherwise we will just fill our cwd with useless feature files"""
 		
@@ -177,8 +168,10 @@ class Box:
 
         #now load the model for the given feature
 		if not os.path.isfile(model_file):
-			#for the run with all music files in the dataset and 10 epochs
-			model_file = self.path_to_store+'/'+'model_'+self.Id+'/'+feature+'_for_999_files_10_2020630212932.pkl'
+			try:
+				model_file = self.path_to_store+self.saved_model_files[feature]
+			except:
+				model_file = self.path_to_store+'/'+'Backups'+'/'+'model_Backup_'+self.name+'/'+feature+'_for_999_files_10.pkl'
 			
 		assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
 		with open(model_file, 'rb') as f:
@@ -312,6 +305,13 @@ class BoxInput(Box):
 			data_train.append([a for sample_row in sample for a in sample_row])
 		return np.array(data_train)
 
+	def get_features(self, max_songs_per_genre, overwrite): #needs to be here because of classify
+		""" Place for the documentation """
+		#stuff before
+		#ask for all of the arguments
+		self.features_file_name = f'{self.path_to_store}/features_file.csv'
+		write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names, max_songs_per_genre, overwrite)
+
 	def preprocess(self, feature_data_file = ' '):
 		""" WILL NOT WORK YET HAS TO BE ADJUSTED TO THE OOP-APPROACH """
 		if os.path.isfile(feature_data_file):
@@ -371,7 +371,12 @@ class BoxDecision(Box):
 #                         FUNCTIONS
 #_____________________________________________________________________
 
-
+def save_test_overall_model():
+	""" This function should run a test of the entire Box-Structure and save it to a file """
+	if create_file == True:
+		save_model_name = f'/score_{self.Id}/{self.time_stamp}.csv'
+		self.save_to_file([[score_list], columns], save_model_name, mode='csv')
+	pass
 
 #_____________________________________________________________________
 #                            MAIN
@@ -379,27 +384,30 @@ class BoxDecision(Box):
 
 def main():
 	""" Place for the documentation """
-	Programm = [BoxInput(1), BoxLogisticRegression(2, 'hardcore'), BoxDecision(6, 'max')]
+	Programm = [BoxInput(1), 
+	BoxLogisticRegression(2, 'hardcore'), 
+	BoxSupportVectorMachine(3, "linear"), 
+	BoxSupportVectorMachine(4, "poly"),
+	BoxSupportVectorMachine(5, "rbf"), 
+	BoxSupportVectorMachine(6, "sigmoid"), 
+	BoxMLPClassifier(7, 'notTF'), 
+	BoxRandomForestClassifier(8, 'Endor'), 
+	BoxDecision(9, 'max')]
 	# Programm[0].get_features(50, 'y')
 	X, y, feature_list = Programm[0].preprocess(feature_data_file = Programm[0].path_to_store+'/complete_data_4_features.csv')
-	# print(X_train) 
-	# print(X_test)
-	# print(y_train) 
-	# print(y_test)
-	# print(feature_list)
+	music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
 	files = ['C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
 			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
 			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
 			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
 			'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
-	# Programm[1].train([feature_list, y], repetitions=10)
-	Programm[1].test([feature_list, y], create_file = True, load_model_files=files)
-
-	music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
-
-	prediction, decision = Programm[1].classify(music_file, create_file=True)
-	print(prediction)
-	print(decision)
+	
+	for Box in Programm[1:-1]:
+		Box.train([feature_list, y], repetitions=10)
+		print(Box.test([feature_list, y]))
+		prediction, decision = Box.classify(music_file, create_file=True)
+		print(prediction)
+		print(decision)
 
 if __name__ == '__main__':
 	main()
