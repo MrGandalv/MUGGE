@@ -6,7 +6,7 @@ featurelist = "all_feat_combined chroma_stft spectral_centroid zero_crossing_rat
 
 labels = featurelist
 
-data = pd.read_csv("accuracy_overview.csv")
+data = pd.read_csv("accuracy_overview_whole_songs.csv")
 
 accuracies = data.iloc[:, 3]
 
