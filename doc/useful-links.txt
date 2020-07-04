@@ -1,0 +1,25 @@
+___________________________________________________________________________________________________________________________________________________
+|                                                                                                                                                 |
+|    This should be a list where we can collect some very useful links for the project. Doesn't matter if this is just papers about the project   |
+|    or Youtube videos about programming. :)                                                                                                      |
+|                                                                                                                                                 |
+___________________________________________________________________________________________________________________________________________________
+
+__________________________________________________________
+
+                   PROGRAMMING
+__________________________________________________________
+
+- If you want to get a deep understanding about what one might think about while programming stuff could check
+  this guys Tutorial about C++ . He is amazing. (Florian)
+
+  https://www.youtube.com/user/TheChernoProject
+
+- Everything I know about Python is basically from his videos. If you think about any crazy application of coding,
+  this guy has a tutorial on it! ;) (Florian)
+
+  https://www.youtube.com/user/sentdex
+
+  also very helpful is: https://www.youtube.com/channel/UCCezIgC97PvUuR4_gbFUs5g
+
+  - https://arxiv.org/abs/2002.09748    possibly helpful, don't know
