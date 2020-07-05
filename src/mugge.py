@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import os
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import librosa
 
@@ -381,6 +381,7 @@ class BoxInput(Box):
         return X, y, feature_list
 
     def decide():
+		music_array = []
         decision = input(
             'Decide if you want to record or take a file: Record = R, File = F:')
         if decision == 'R':
