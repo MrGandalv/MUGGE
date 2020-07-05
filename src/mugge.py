@@ -47,8 +47,11 @@ class Box:
     """This class is the parent of all box-method-objects."""
 
     path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
+    # path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
     # if not necessary here then move to input box
     path_of_data = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres'
+    # path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
+
     # list of all features that are used
     feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc"]
     # list of all methods and boxes that are used
@@ -155,22 +158,26 @@ class Box:
 		somewhere else) because otherwise we will just fill our cwd with useless feature files"""
 
         # extracting the features from the music file
-        y, sr = librosa.load(music_file, mono=True, duration=5)
+        y, sr = librosa.load(music_file, mono=True, duration=30)
+        print(music_file)
         feature_list = []
         if feature == 'chroma_stft' or feature == 'all':
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
             feature_list.append(np.mean(c_s))
+            feature_list.append(np.var(c_s))
         if feature == 'spectral_centroid' or feature == 'all':
             s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
             feature_list.append(np.mean(s_c))
+            feature_list.append(np.var(s_c))
         if feature == 'zero_crossing_rate' or feature == 'all':
             z_c_r = librosa.feature.zero_crossing_rate(y)
             feature_list.append(np.mean(z_c_r))
+            feature_list.append(np.var(z_c_r))
         if feature == 'mfcc' or feature == 'all':
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
             for mfeat in mfcc:
                 feature_list.append(np.mean(mfeat))
-
+                feature_list.append(np.var(mfeat))
             # now load the model for the given feature
         if not os.path.isfile(model_file):
             try:
@@ -287,7 +294,7 @@ class BoxRandomForestClassifier(Box):
         super().__init__(number)
         self.Id = f'Box_{self.box_number}_{self.name}'
         self.mode = mode
-        self.model = RandomForestClassifier()
+        self.model = RandomForestClassifier(random_state=3)
 
 
 # ____________________________________ Input Box _________________________________________________________
@@ -351,7 +358,6 @@ class BoxInput(Box):
         encoder = LabelEncoder()
         y = encoder.fit_transform(feature_data[0])
         scaler = StandardScaler()
-
         X = [scaler.fit_transform(data) for data in feature_data[1:]]
         feature_list = [k for k in zip(X, self.feature_names)]
 
@@ -405,14 +411,15 @@ def main():
                 BoxDecision(9, 'max')]
     # Programm[0].get_features(50, 'y')
     X, y, feature_list = Programm[0].preprocess(
-        feature_data_file=Programm[0].path_to_store + '/complete_data_4_features.csv')
+        feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
     music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
-    files = [
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
+    # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/rock/rock.00011.wav"
+    # files = [
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 
     for Box in Programm[1:-1]:
         print(' ')
