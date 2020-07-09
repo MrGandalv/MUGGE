@@ -387,7 +387,7 @@ class BoxInput(Box):
         feature_data.append(np.array(data.iloc[:, [4, 5]]))
         # only the last 40 columns (mfcc)
         feature_data.append(np.array(data.iloc[:, 6:46]))
-
+        print('before the scaler')
         print(feature_data)
 
         encoder = LabelEncoder()
