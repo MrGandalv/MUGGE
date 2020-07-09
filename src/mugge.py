@@ -34,7 +34,7 @@ from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D,
 import concurrent.futures
 
 # other scripts
-from feature_extraction import write_feature_file
+from extended_feature_extraction import write_feature_file
 
 
 # from compare_accuracy import write_accuracy_to_file, write_headline 
@@ -160,37 +160,70 @@ class Box:
         # extracting the features from the music file
         y, sr = librosa.load(music_file, mono=True, duration=30)
         print(music_file)
-        feature_list = []
+        feature_list = ''
         if feature == 'chroma_stft' or feature == 'all':
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
-            feature_list.append(np.mean(c_s))
-            feature_list.append(np.var(c_s))
+            feature_list+=f'{np.mean(c_s)}+{np.var(c_s)}_'
         if feature == 'spectral_centroid' or feature == 'all':
             s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
-            feature_list.append(np.mean(s_c))
-            feature_list.append(np.var(s_c))
+            feature_list+=f'{np.mean(s_c)}+{np.var(s_c)}_'
         if feature == 'zero_crossing_rate' or feature == 'all':
             z_c_r = librosa.feature.zero_crossing_rate(y)
-            feature_list.append(np.mean(z_c_r))
-            feature_list.append(np.var(z_c_r))
+            feature_list+=f'{np.mean(z_c_r)}+{np.var(z_c_r)}_'
         if feature == 'mfcc' or feature == 'all':
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
             for mfeat in mfcc:
-                feature_list.append(np.mean(mfeat))
-                feature_list.append(np.var(mfeat))
+                feature_list+=f'mfcc+{np.mean(mfeat)}+{np.var(mfeat)}_'
             # now load the model for the given feature
+        # print(feature_list)
+
+        #the first element of this list will either be a list of all other feature except mfcc or the first
+        #mfcc tuple, tuples (mean and variance) will be connected with a '+' as a string
+        dummy_list = [k.split('_')[:-1] for k in feature_list.split('mfcc+')] #the [:-1] because the string will always end with _
+        #now put everything in one list, split them by the '+' and convert them into floats and arrays
+        feature_list = dummy_list[0].copy()
+        for pair in dummy_list[1:]:
+            #pair will always have just one element but we don't want lists in our list and hence we pick the first element of pair
+            feature_list.append(pair[0]) 
+        feature_list = np.array([np.array(pair_string.split('+'), dtype=float) for pair_string in feature_list])
+        # print(feature_list)
+
+        scaler = StandardScaler()
+        feature_list = scaler.fit_transform(feature_list)
+        # print(feature_list)
+
         if not os.path.isfile(model_file):
             try:
                 model_file = self.path_to_store + self.saved_model_files[feature]
             except:
-                model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_999_files_10.pkl'
+                model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + reduce(lambda x,y: x+'_'+y , self.Id.split('_')[2:]) + '/' + feature + '_for_999_files_10.pkl'
 
         assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
         with open(model_file, 'rb') as f:
             self.model = pickle.load(f)
 
+
+
+
+            # UNDER CONSTRUCTION
+
+        csv_file = pd.read_csv(self.path_to_store + '/all_features_whole_songs.csv')
+        csv_file = csv_file.drop(["filename"], axis=1)
+        music_file_to_test = np.array(csv_file.iloc[10,:-1])
+        # music_file_to_test = [np.array(a.append(b), dtype=float) for (a,b) in zip(dummy_mat[0::2], dummy_mat[1::2])]#reshape it and take every second and append it to the element before
         # predict
-        prediction = self.model.predict([feature_list])
+        # feature_list = [k[0] for k in feature_list.reshape(-1,1)]
+        # print(feature_list)
+        print(music_file_to_test)
+        music_file_to_test = scaler.fit_transform(music_file_to_test)
+        prediction = self.model.predict([music_file_to_test])
+
+        
+
+
+
+
+
 
         # save the prediction
         if create_file == True:
@@ -310,16 +343,16 @@ class BoxInput(Box):
         if not path_to_load is None:
             self.path_of_data = path_to_load
 
-    @staticmethod
-    def flatten(data):
-        """if there is no flattening method provided by the package, this function flattens and normalizes the data.
-		must be 3-dim"""
-        data = tf.keras.utils.normalize(data, axis=1)
+  #   @staticmethod
+  #   def flatten(data):
+  #       """if there is no flattening method provided by the package, this function flattens and normalizes the data.
+		# must be 3-dim"""
+  #       data = tf.keras.utils.normalize(data, axis=1)
 
-        data_train = []
-        for sample in data:
-            data_train.append([a for sample_row in sample for a in sample_row])
-        return np.array(data_train)
+  #       data_train = []
+  #       for sample in data:
+  #           data_train.append([a for sample_row in sample for a in sample_row])
+  #       return np.array(data_train)
 
     def get_features(self, max_songs_per_genre, overwrite):  # needs to be here because of classify
         """ Place for the documentation """
@@ -354,6 +387,8 @@ class BoxInput(Box):
         feature_data.append(np.array(data.iloc[:, [4, 5]]))
         # only the last 40 columns (mfcc)
         feature_data.append(np.array(data.iloc[:, 6:46]))
+
+        print(feature_data)
 
         encoder = LabelEncoder()
         y = encoder.fit_transform(feature_data[0])
@@ -412,7 +447,8 @@ def main():
     # Programm[0].get_features(50, 'y')
     X, y, feature_list = Programm[0].preprocess(
         feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
-    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
+    print(feature_list[0])
+    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00010.au'
     # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/rock/rock.00011.wav"
     # files = [
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
@@ -423,9 +459,9 @@ def main():
 
     for Box in Programm[1:-1]:
         print(' ')
-        print(f'Training of {Box.Id}')
-        Box.train([feature_list, y], repetitions=10)
-        print(Box.test([feature_list, y]))
+        # print(f'Training of {Box.Id}')
+        # Box.train([feature_list, y], repetitions=10)
+        # print(Box.test([feature_list, y]))
         print(Box.classify(music_file, create_file=True))
 
 
