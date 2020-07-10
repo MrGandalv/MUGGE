@@ -394,7 +394,7 @@ class BoxInput(Box):
         else:
             # crash problem further on , if user calls this
             print('Please decide between Recording(R) and File(F).')
-        return music_array
+        return os.getcwd()+'\\output.wav'
 
 # ____________________________________ Decision Box _________________________________________________________
 
@@ -445,7 +445,7 @@ def main():
     # Programm[0].get_features(50, 'y')
     # X, y, feature_list = Programm[0].preprocess(
     #     feature_data_file=Programm[0].path_to_store + '/complete_data_4_features.csv')
-    music_file = Programm[0].decide()
+    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'#Programm[0].decide()
     # files = [
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
@@ -453,12 +453,12 @@ def main():
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 
-    # for Box in Programm[1:-1]:
+    for Box in Programm[1:-1]:
     #     print(' ')
     #     print(f'Training of {Box.Id}')
     #     Box.train([feature_list, y], repetitions=10)
     #     print(Box.test([feature_list, y]))
-    #     print(Box.classify(music_file, user=True, create_file=True))
+        print(Box.classify(music_file, user=True, create_file=True))
 
 
 if __name__ == '__main__':
