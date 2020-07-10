@@ -35,7 +35,8 @@ import concurrent.futures
 
 # other scripts
 from feature_extraction import write_feature_file
-import input
+from record_music import prepro, record
+
 
 # from compare_accuracy import write_accuracy_to_file, write_headline
 
@@ -380,16 +381,16 @@ class BoxInput(Box):
 
         return X, y, feature_list
 
+    @staticmethod
     def decide():
-		music_array = []
-        decision = input(
-            'Decide if you want to record or take a file: Record = R, File = F:')
+        music_array = []
+        decision = input('Decide if you want to record or take a file: Record = R, File = F:')
         if decision == 'R':
-            music_array = input.record()
+            music_array = record()
 
         elif decision == 'F':
             file_name = input('Enter audio file(WAV or MP3):')
-            music_array = input.prepro(file_name)
+            music_array = prepro(file_name)
         else:
             # crash problem further on , if user calls this
             print('Please decide between Recording(R) and File(F).')
@@ -442,22 +443,22 @@ def main():
                 BoxRandomForestClassifier(8, 'Endor'),
                 BoxDecision(9, 'max')]
     # Programm[0].get_features(50, 'y')
-    X, y, feature_list = Programm[0].preprocess(
-        feature_data_file=Programm[0].path_to_store + '/complete_data_4_features.csv')
+    # X, y, feature_list = Programm[0].preprocess(
+    #     feature_data_file=Programm[0].path_to_store + '/complete_data_4_features.csv')
     music_file = Programm[0].decide()
-    files = [
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
-        'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
+    # files = [
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 
-    for Box in Programm[1:-1]:
-        print(' ')
-        print(f'Training of {Box.Id}')
-        Box.train([feature_list, y], repetitions=10)
-        print(Box.test([feature_list, y]))
-        print(Box.classify(music_file, user=True, create_file=True))
+    # for Box in Programm[1:-1]:
+    #     print(' ')
+    #     print(f'Training of {Box.Id}')
+    #     Box.train([feature_list, y], repetitions=10)
+    #     print(Box.test([feature_list, y]))
+    #     print(Box.classify(music_file, user=True, create_file=True))
 
 
 if __name__ == '__main__':
