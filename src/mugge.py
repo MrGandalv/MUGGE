@@ -53,14 +53,14 @@ class Box:
     # path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
 
     # list of all features that are used
-    feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc"]
+    feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc", 'chord']
     # list of all methods and boxes that are used
     box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression',
                  'SupportVectorMachine']
     # list of all genres
     genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
 
-    current_feature_the_model_is_trained_for = ''
+    # current_feature_the_model_is_trained_for = ''
 
     def __init__(self, number):
         """defines the number of the box 1 - 7, where 6 referes to the decision box, 1 to the input box
@@ -137,11 +137,11 @@ class Box:
         else:
             feature = load_model_file.split('/')[-1].split('_')[0]  # the feature of the loaded model
 
+        assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
+        
         feature_list, y = test_data
         feature_list = {i: k for (k, i) in feature_list}  # convert it to a dictionary in order to access it easier
         X = feature_list[feature]
-
-        assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
 
         with open(load_model_file, 'rb') as f:
             self.model = pickle.load(f)
