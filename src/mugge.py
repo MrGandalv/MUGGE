@@ -146,6 +146,7 @@ class Box:
 
         # every data except the last column(genre)
         feature_data.append(data)
+        # print(feature_data[-1])
         self.scaler.update({'all': StandardScaler().fit(feature_data[-1])})
         # only the first and second columns (chroma_stft)
         feature_data.append(data[:, [0, 1]])
@@ -162,7 +163,7 @@ class Box:
 
         self.encoder = LabelEncoder().fit(feature_data[0])
         y = self.encoder.transform(feature_data[0])
-        feature_list = [self.scaler[feat_nam].transform(dat) for (dat, feat_nam) in zip(feature_data[1:], self.feature_names)]
+        feature_list = [[self.scaler[feat_nam].transform(dat), feat_nam] for (dat, feat_nam) in zip(feature_data[1:], self.feature_names)]
 
         # X = [self.scaler.transform(feat) for feat in feature_data[1:]]
 
@@ -239,23 +240,23 @@ class Box:
         feature_list = []
         if feature == 'chroma_stft' or feature == 'all':
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
-            feature_list.append({np.mean(c_s)})
-            feature_list.append({np.var(c_s)})
+            feature_list.append(np.mean(c_s))
+            feature_list.append(np.var(c_s))
         if feature == 'spectral_centroid' or feature == 'all':
             s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
-            feature_list.append({np.mean(s_c)})
-            feature_list.append({np.var(s_c)})
+            feature_list.append(np.mean(s_c))
+            feature_list.append(np.var(s_c))
         if feature == 'zero_crossing_rate' or feature == 'all':
             z_c_r = librosa.feature.zero_crossing_rate(y)
-            feature_list.append({np.mean(z_c_r)})
-            feature_list.append({np.var(z_c_r)})
+            feature_list.append(np.mean(z_c_r))
+            feature_list.append(np.var(z_c_r))
         if feature == 'mfcc' or feature == 'all':
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
             for mfeat in mfcc:
-                feature_list.append({np.mean(mfeat)})
-                feature_list.append({np.var(mfeat)})
+                feature_list.append(np.mean(mfeat))
+                feature_list.append(np.var(mfeat))
             # now load the model for the given feature
-        print(feature_list)
+        # print(feature_list)
 
         if not os.path.isfile(scaler_file):
             if not 'self.scaler' in locals():
@@ -267,7 +268,7 @@ class Box:
                 with open(self.path_to_store+self.save_encoder_name, 'rb') as f:
                     self.encoder = pickle.load(f)
         
-        feature_list = self.scaler[feature].transform(np.array(feature_list, dtype=float))
+        feature_list = self.scaler[feature].transform([feature_list])
         # print(feature_list)
 
         if not os.path.isfile(model_file):
@@ -281,18 +282,17 @@ class Box:
         with open(model_file, 'rb') as f:
             self.model = pickle.load(f)
 
-        prediction = self.model.predict([feature_list])
+        prediction = self.encoder.inverse_transform(self.model.predict(feature_list))
 
         # save the prediction
         if create_file == True:
             music_name = music_file.split('/')[-1]
-            prediction_list = [music_name, feature,
-                               self.genrelist[prediction[0]], prediction[0]]
+            prediction_list = [music_name, feature, prediction[0]]
             save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
-            self.save_to_file([[prediction_list], ['file name', 'feature', 'decision', 'argmax of prediction']],
+            self.save_to_file([[prediction_list], ['file name', 'feature', 'genre']],
                               save_model_name, mode='csv')
 
-        return prediction, self.genrelist[prediction[0]]
+        return prediction[0]
 
 
 # ____________________________________ Method Boxes _________________________________________________________
@@ -466,20 +466,12 @@ def main():
                 BoxMLPClassifier(7, 'notTF'),
                 BoxRandomForestClassifier(8, 'Endor'),
                 BoxDecision(9, 'max')]
-    # Programm[0].get_features(50, 'y')
 
     feature_list, y = Programm[0].preprocess(feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
-    # print(feature_list[0])
-    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00010.au'
+    # print(feature_list)
+    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
     # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/rock/rock.00011.wav"
     # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'#Programm[0].decide()
-
-    # files = [
-    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
-    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
-    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
-    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
-    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 
     for Box in Programm[1:-1]:
         print(' ')
