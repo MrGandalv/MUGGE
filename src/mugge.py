@@ -53,13 +53,15 @@ class Box:
     # path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
 
     # list of all features that are used
-    feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc", 'chord']
+    feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc"]
     # list of all methods and boxes that are used
     box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression',
                  'SupportVectorMachine']
     # list of all genres
     genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
 
+    save_encoder_name = '/Backup/encoder.pkl'
+    save_scaler_name = '/Backup/scaler.pkl'
     # current_feature_the_model_is_trained_for = ''
 
     def __init__(self, number):
@@ -106,6 +108,61 @@ class Box:
 
         os.chdir(cwd)
 
+    def get_features(self, max_songs_per_genre, overwrite):  # needs to be here because of classify
+        """ Place for the documentation """
+        # stuff before
+        # ask for all of the arguments
+        self.features_file_name = f'{self.path_to_store}/all_features_whole_songs.py'
+        write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names,
+                           max_songs_per_genre, overwrite)
+
+    def preprocess(self, feature_data_file=' '):
+        """ works soon perfectly """
+        if os.path.isfile(feature_data_file):
+            data = pd.read_csv(feature_data_file)
+        else:
+            data = pd.read_csv(self.features_file_name)
+        # we dont need the column with the filenames anymore
+        data = data.drop(["filename"], axis=1)
+        data  = np.array(data.values.tolist())
+
+        data_genre = data[:,-1].copy()
+        # print(data[:,-1])
+        data = np.array(data[:,:-1].copy(),dtype=float)
+        feature_data = []
+
+        self.scaler = {}
+
+        # genre
+        feature_data.append(data_genre)
+
+        # every data except the last column(genre)
+        feature_data.append(data)
+        self.scaler.update({'all': StandardScaler().fit(feature_data[-1])})
+        # only the first and second columns (chroma_stft)
+        feature_data.append(data[:, [0, 1]])
+        self.scaler.update({'chroma_stft': StandardScaler().fit(feature_data[-1])})
+        # only the third and fourth columns (spectral_centroid)
+        feature_data.append(data[:, [2, 3]])
+        self.scaler.update({'spectral_centroid': StandardScaler().fit(feature_data[-1])})
+        # only the fifth and sixth columns (zero_crossing_rate)
+        feature_data.append(data[:, [4, 5]])
+        self.scaler.update({'zero_crossing_rate': StandardScaler().fit(feature_data[-1])})
+        # only the last 40 columns (mfcc)
+        feature_data.append(data[:, 6:46])
+        self.scaler.update({'mfcc': StandardScaler().fit(feature_data[-1])})
+
+        self.encoder = LabelEncoder().fit(feature_data[0])
+        y = self.encoder.transform(feature_data[0])
+        feature_list = [self.scaler[feat_nam].transform(dat) for (dat, feat_nam) in zip(feature_data[1:], self.feature_names)]
+
+        # X = [self.scaler.transform(feat) for feat in feature_data[1:]]
+
+        self.save_to_file(self.encoder, self.save_encoder_name, mode='pickle')
+        self.save_to_file(self.scaler, self.save_scaler_name, mode='pickle')
+
+        return feature_list, y
+
     def train(self, training_data, repetitions=1):
         """ Place for the documentation """
         feature_list, y = training_data
@@ -148,7 +205,7 @@ class Box:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
         return self.model.score(X_test, y_test), feature
 
-    def classify(self, music_file, feature='all', create_file=False, model_file=' '):
+    def classify(self, music_file, feature='all', create_file=False, model_file=' ', scaler_file='', encoder_file=''):
         """ This should take a music file as data to predict its genre
 		need to give him the feature you want it to predict from
 		model_file is a list of all the models that should be tested 
@@ -160,36 +217,38 @@ class Box:
         # extracting the features from the music file
         y, sr = librosa.load(music_file, mono=True, duration=30)
         print(music_file)
-        feature_list = ''
+        feature_list = []
         if feature == 'chroma_stft' or feature == 'all':
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
-            feature_list+=f'{np.mean(c_s)}+{np.var(c_s)}_'
+            feature_list.append({np.mean(c_s)})
+            feature_list.append({np.var(c_s)})
         if feature == 'spectral_centroid' or feature == 'all':
             s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
-            feature_list+=f'{np.mean(s_c)}+{np.var(s_c)}_'
+            feature_list.append({np.mean(s_c)})
+            feature_list.append({np.var(s_c)})
         if feature == 'zero_crossing_rate' or feature == 'all':
             z_c_r = librosa.feature.zero_crossing_rate(y)
-            feature_list+=f'{np.mean(z_c_r)}+{np.var(z_c_r)}_'
+            feature_list.append({np.mean(z_c_r)})
+            feature_list.append({np.var(z_c_r)})
         if feature == 'mfcc' or feature == 'all':
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
             for mfeat in mfcc:
-                feature_list+=f'mfcc+{np.mean(mfeat)}+{np.var(mfeat)}_'
+                feature_list.append({np.mean(mfeat)})
+                feature_list.append({np.var(mfeat)})
             # now load the model for the given feature
-        # print(feature_list)
+        print(feature_list)
 
-        #the first element of this list will either be a list of all other feature except mfcc or the first
-        #mfcc tuple, tuples (mean and variance) will be connected with a '+' as a string
-        dummy_list = [k.split('_')[:-1] for k in feature_list.split('mfcc+')] #the [:-1] because the string will always end with _
-        #now put everything in one list, split them by the '+' and convert them into floats and arrays
-        feature_list = dummy_list[0].copy()
-        for pair in dummy_list[1:]:
-            #pair will always have just one element but we don't want lists in our list and hence we pick the first element of pair
-            feature_list.append(pair[0]) 
-        feature_list = np.array([np.array(pair_string.split('+'), dtype=float) for pair_string in feature_list])
-        # print(feature_list)
+        if not os.path.isfile(scaler_file):
+            if not 'self.scaler' in locals():
+                with open(self.path_to_store+self.save_scaler_name, 'rb') as f:
+                    self.scaler = pickle.load(f)
 
-        scaler = StandardScaler()
-        feature_list = scaler.fit_transform(feature_list)
+        if not os.path.isfile(encoder_file):
+            if not 'self.encoder' in locals():
+                with open(self.path_to_store+self.save_encoder_name, 'rb') as f:
+                    self.encoder = pickle.load(f)
+        
+        feature_list = self.scaler[feature].transform(np.array(feature_list, dtype=float))
         # print(feature_list)
 
         if not os.path.isfile(model_file):
@@ -202,28 +261,7 @@ class Box:
         with open(model_file, 'rb') as f:
             self.model = pickle.load(f)
 
-
-
-
-            # UNDER CONSTRUCTION
-
-        csv_file = pd.read_csv(self.path_to_store + '/all_features_whole_songs.csv')
-        csv_file = csv_file.drop(["filename"], axis=1)
-        music_file_to_test = np.array(csv_file.iloc[10,:-1])
-        # music_file_to_test = [np.array(a.append(b), dtype=float) for (a,b) in zip(dummy_mat[0::2], dummy_mat[1::2])]#reshape it and take every second and append it to the element before
-        # predict
-        # feature_list = [k[0] for k in feature_list.reshape(-1,1)]
-        # print(feature_list)
-        print(music_file_to_test)
-        music_file_to_test = scaler.fit_transform(music_file_to_test)
-        prediction = self.model.predict([music_file_to_test])
-
-        
-
-
-
-
-
+        prediction = self.model.predict([feature_list])
 
         # save the prediction
         if create_file == True:
@@ -354,49 +392,7 @@ class BoxInput(Box):
   #           data_train.append([a for sample_row in sample for a in sample_row])
   #       return np.array(data_train)
 
-    def get_features(self, max_songs_per_genre, overwrite):  # needs to be here because of classify
-        """ Place for the documentation """
-        # stuff before
-        # ask for all of the arguments
-        self.features_file_name = f'{self.path_to_store}/all_features_whole_songs.py'
-        write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names,
-                           max_songs_per_genre, overwrite)
-
-    def preprocess(self, feature_data_file=' '):
-        """ WILL NOT WORK YET HAS TO BE ADJUSTED TO THE OOP-APPROACH """
-        if os.path.isfile(feature_data_file):
-            data = pd.read_csv(feature_data_file)
-        else:
-            data = pd.read_csv(self.features_file_name)
-        # we dont need the column with the filenames anymore
-        data = data.drop(["filename"], axis=1)
-
-        feature_data = []
-
-        # genre
-        feature_data.append(np.array(data.iloc[:, -1]))
-
-        # every data except the last column(genre)
-        feature_data.append(np.array(data.iloc[:, :-1]))
-
-        # only the first and second columns (chroma_stft)
-        feature_data.append(np.array(data.iloc[:, [0, 1]]))
-        # only the third and fourth columns (spectral_centroid)
-        feature_data.append(np.array(data.iloc[:, [2, 3]]))
-        # only the fifth and sixth columns (zero_crossing_rate)
-        feature_data.append(np.array(data.iloc[:, [4, 5]]))
-        # only the last 40 columns (mfcc)
-        feature_data.append(np.array(data.iloc[:, 6:46]))
-        print('before the scaler')
-        print(feature_data)
-
-        encoder = LabelEncoder()
-        y = encoder.fit_transform(feature_data[0])
-        scaler = StandardScaler()
-        X = [scaler.fit_transform(data) for data in feature_data[1:]]
-        feature_list = [k for k in zip(X, self.feature_names)]
-
-        return X, y, feature_list
+    
 
 
 # ____________________________________ Decision Box _________________________________________________________
@@ -445,7 +441,7 @@ def main():
                 BoxRandomForestClassifier(8, 'Endor'),
                 BoxDecision(9, 'max')]
     # Programm[0].get_features(50, 'y')
-    X, y, feature_list = Programm[0].preprocess(
+    feature_list, y = Programm[0].preprocess(
         feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
     print(feature_list[0])
     music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00010.au'
