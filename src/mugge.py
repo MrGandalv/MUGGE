@@ -30,11 +30,13 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
 
+from sklearn.metrics import precision_score
 # multiprocessing and multithreading
 import concurrent.futures
 
 # other scripts
 from feature_extraction import write_feature_file
+from feature_extraction import append_data_to_file
 
 
 # from compare_accuracy import write_accuracy_to_file, write_headline 
@@ -46,11 +48,11 @@ from feature_extraction import write_feature_file
 class Box:
     """This class is the parent of all box-method-objects."""
 
-    path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
-    # path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
+    # path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
+    path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
     # if not necessary here then move to input box
-    path_of_data = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres'
-    # path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
+    # path_of_data = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres'
+    path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
 
     # list of all features that are used
     feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc"]
@@ -108,21 +110,31 @@ class Box:
 
     def train(self, training_data, repetitions=1):
         """ Place for the documentation """
-        feature_list, y = training_data
+        [feature_list, y] = training_data
         self.saved_model_files = {}
         for epoch in tqdm(range(repetitions)):
-            for X, feature in feature_list:
-                # print(f'Epoch: {epoch+1}, feature: {feature}')
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
-                self.model.fit(X_train, y_train)
-                num_of_music_files = len(X)
-                save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch + 1}_{self.time_stamp}.pkl'
-                self.saved_model_files.update({feature: save_model_name})
-                self.save_to_file(self.model, save_model_name, mode='pickle')
+            # for X, feature in feature_list:
+            X, feature = feature_list[0]
+            # print(f'Epoch: {epoch+1}, feature: {feature}')
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+            # append_data_to_file("error.csv", X_test, "w")
+            # append_data_to_file("error.csv", y_test, "a")
+            self.model.fit(X_train, y_train)
+            num_of_music_files = len(X)
+            save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch + 1}_{self.time_stamp}.pkl'
+            self.saved_model_files.update({feature: save_model_name})
+            self.save_to_file(self.model, save_model_name, mode='pickle')
+            # print(self.model.score(X_test, y_test))
+            y_pred = self.model.predict(X_test)
+            # print(precision_score(y_test, y_pred, average='macro'))
+            # print(precision_score(y_test, y_pred, average='micro'))
+            # print(precision_score(y_test, y_pred, average='weighted'))
+        return X_test, y_test
 
     # print(self.saved_model_files)
 
     def test(self, test_data, feature='all', load_model_file=''):
+
         """ load_model_file is a list of all the models that should be tested by default it contains the name of the
         feature the model is currently trained for, which of course not a file-name-string if a file-name-string is
         provided (one or many) then it will load the models (one after the other) and test them if create_file = True
@@ -148,18 +160,18 @@ class Box:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
         return self.model.score(X_test, y_test), feature
 
-    def classify(self, music_file, feature='all', create_file=False, model_file=' '):
+    def classify(self, X_test, y_test, music_file, scaler, feature='all', create_file=False, model_file=' '):
+
         """ This should take a music file as data to predict its genre
-		need to give him the feature you want it to predict from
-		model_file is a list of all the models that should be tested 
-		by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
-	
-		stores the feature file in the current working directory and deletes it in the end (except the user stored it before
-		somewhere else) because otherwise we will just fill our cwd with useless feature files"""
+        need to give him the feature you want it to predict from
+        model_file is a list of all the models that should be tested
+        by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
+
+        stores the feature file in the current working directory and deletes it in the end (except the user stored it before
+        somewhere else) because otherwise we will just fill our cwd with useless feature files"""
 
         # extracting the features from the music file
-        y, sr = librosa.load(music_file, mono=True, duration=30)
-        print(music_file)
+        y, sr = librosa.load(music_file, mono=True, duration=30, offset=90)
         feature_list = []
         if feature == 'chroma_stft' or feature == 'all':
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
@@ -191,14 +203,25 @@ class Box:
 
         # predict
         prediction = self.model.predict([feature_list])
-
+        print(feature_list[0], feature_list[1], feature_list[2])
+        print(len(feature_list))
+        scaled_data = scaler.transform([feature_list])
+        print(scaled_data[0][0], scaled_data[0][1], scaled_data[0][2])
+        print(self.model.predict_proba(scaled_data))
+        print(self.model.predict(scaled_data))
+        print(self.genrelist[self.model.predict(scaled_data)[0]])
+        # data = pd.read_csv("error.csv")
+        # print(data.iloc[0:])
+        # print(data.head())
+        print("ACJHTUGN: " + str(self.model.score(X_test, y_test)))
+        print(self.genrelist[prediction[0]])
         # save the prediction
-        if create_file == True:
+        if create_file:
             music_name = music_file.split('/')[-1]
-            prediction_list = [music_name, feature, self.genrelist[prediction[0]], prediction[0]]
-            save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
-            self.save_to_file([[prediction_list], ['file name', 'feature', 'decision', 'argmax of prediction']],
-                              save_model_name, mode='csv')
+        prediction_list = [music_name, feature, self.genrelist[prediction[0]], prediction[0]]
+        save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
+        self.save_to_file([[prediction_list], ['file name', 'feature', 'decision', 'argmax of prediction']],
+                          save_model_name, mode='csv')
 
         return prediction, self.genrelist[prediction[0]]
 
@@ -268,7 +291,7 @@ class BoxSupportVectorMachine(Box):
         super().__init__(number)
         self.mode = mode  # linear, poly, rbf, sigmoid
         self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
-        self.model = svm.SVC(kernel=self.mode)
+        self.model = svm.SVC(kernel=self.mode, probability=True)
 
 
 class BoxMLPClassifier(Box):
@@ -357,11 +380,18 @@ class BoxInput(Box):
 
         encoder = LabelEncoder()
         y = encoder.fit_transform(feature_data[0])
-        scaler = StandardScaler()
-        X = [scaler.fit_transform(data) for data in feature_data[1:]]
-        feature_list = [k for k in zip(X, self.feature_names)]
+        genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
 
-        return X, y, feature_list
+        print("hi" + str(encoder.transform(genrelist)))
+        scaler = StandardScaler()
+        X = [scaler.fit_transform(data) for data in [feature_data[1]]]
+        print(len(X[0]))
+        feature_list = [k for k in zip(X, self.feature_names)]
+        # print(len(feature_list))
+        # print(len(feature_list[0][1]))
+        # print(feature_list[0][1])
+        # print(len(feature_list[1][0]))
+        return X, y, feature_list, scaler
 
 
 # ____________________________________ Decision Box _________________________________________________________
@@ -403,17 +433,21 @@ def main():
     Programm = [BoxInput(1),
                 BoxLogisticRegression(2, 'hardcore'),
                 BoxSupportVectorMachine(3, "linear"),
-                BoxSupportVectorMachine(4, "poly"),
-                BoxSupportVectorMachine(5, "rbf"),
-                BoxSupportVectorMachine(6, "sigmoid"),
-                BoxMLPClassifier(7, 'notTF'),
-                BoxRandomForestClassifier(8, 'Endor'),
                 BoxDecision(9, 'max')]
+    # BoxSupportVectorMachine(4, "poly"),
+    # BoxSupportVectorMachine(5, "rbf"),
+    # BoxSupportVectorMachine(6, "sigmoid"),
+    # BoxMLPClassifier(7, 'notTF'),
+    # BoxRandomForestClassifier(8, 'Endor'),
+
     # Programm[0].get_features(50, 'y')
-    X, y, feature_list = Programm[0].preprocess(
+    X, y, feature_list, scaler = Programm[0].preprocess(
         feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
-    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
-    # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/rock/rock.00011.wav"
+    # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
+    # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/jazz/jazz.00036.wav"
+    # print("X " + str(X))
+    # print("y " + str(y))
+    # print("feature_list " + str(feature_list))
     # files = [
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
@@ -421,12 +455,25 @@ def main():
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
     #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 
+    # for Box in Programm[1:-1]:
+    #
+    #     for i in range(12, 19):
+    #         j = 4 * i
+    #         music_file = f"C:/Users/JD/PycharmProjects/newstart/data_music/reggae/reggae.000{j}.wav"
+    #         print(music_file)
+    #         print(' ')
+    #         print(f'Training of {Box.Id}')
+    #         X_test, y_test = Box.train([feature_list, y], repetitions=1)
+    #         print(Box.test([feature_list, y]))
+    #         print(Box.classify(X_test, y_test, music_file, scaler, create_file=True))
     for Box in Programm[1:-1]:
+        music_file = f"C:/Users/JD/PycharmProjects/newstart/data_music/TEST/CalvinHarris-SweetNothingRemix.wav"
+        print(music_file)
         print(' ')
         print(f'Training of {Box.Id}')
-        Box.train([feature_list, y], repetitions=10)
+        X_test, y_test = Box.train([feature_list, y], repetitions=1)
         print(Box.test([feature_list, y]))
-        print(Box.classify(music_file, create_file=True))
+        print(Box.classify(X_test, y_test, music_file, scaler, create_file=True))
 
 
 if __name__ == '__main__':

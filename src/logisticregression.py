@@ -24,7 +24,7 @@ def logiregresstest(X,y):
     model.fit(X_train, y_train)
     return model.score(X_test, y_test)
 
-# Runs a Logistic Regression on the the file 'features_file_name'.
+# Runs a Logistic Regression on the the file 'file_name'.
 # First, edits the data in a way that it can be processed.
 # Because the accuracy of the Logistic Regression depends on the split of training and test data,
 # it makes sense to repeat the Logistic Regression and form an average over all of the received accuracies.

@@ -4,7 +4,7 @@ import numpy as np
 from feature_extraction import append_data_to_file
 from sklearn import svm
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -38,7 +38,7 @@ def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name
     score_list = []
     for i in range(repetitions):
         print(f"Step {i}")  # can be deleted, just shows the progress of the programm
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 * i + 666)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=66 * i + 666)
         classifier.fit(X_train, y_train)
         score_list.append(classifier.score(X_test, y_test))
     avg = round(np.average(score_list), 6)
@@ -49,7 +49,7 @@ def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name
 
 
 # This is the main function of this script. The goal is to write computed accuracies of different classifiers and
-# features in a .csv file. Therefore, at first the feature data must be read form the file 'features_file_name' and
+# features in a .csv file. Therefore, at first the feature data must be read form the file 'file_name' and
 # scaled/normalized. This data will be saved in the list 'feature_list', always paired with its description.
 # Afterwards some classifiers are initialized and saved in a list, where again each of them is paired with its
 # name/description. In the end, it only remains to call the function 'write_accuracy_to_file' for every feature and
@@ -106,10 +106,10 @@ def compute_data(acc_file_name, features_file_name, repetitions):
 
 # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
 # Here 25 repetitions (different train_test_splits) are used.
-features_file_name = "complete_data_4_features.csv"
-acc_file_name = "accuracy_overview.csv"
-
-write_headline(acc_file_name)
+features_file_name = "all_features_whole_songs.csv"
+acc_file_name = "11test.csv"
+#
+# write_headline(acc_file_name)
 compute_data(acc_file_name, features_file_name, 25)
 
 # # Could take some minutes.

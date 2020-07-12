@@ -4,7 +4,7 @@ import numpy as np
 from feature_extraction import append_data_to_file
 from sklearn import svm
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 import time
 
 #  Use the time module to measure how long the program is running.
-starttime = time.time()
+# starttime = time.time()
 
 
 # Use this function to write a headline for the (new) file 'acc_file_name'. Attention: an existing file with the same
@@ -35,7 +35,7 @@ def write_headline(acc_file_name):
 # followed by the computed average accuracy, the variance and also the whole list of the accuracies.
 #
 def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name, X, y, repetitions):
-    score_list = list()
+    score_list = []
     for i in range(repetitions):
         print(f"Step {i}")  # can be deleted, just shows the progress of the programm
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 * i + 666)
@@ -57,39 +57,47 @@ def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name
 # function, the 'repetitions' parameter comes into play, whichs role is explained above.
 #
 def compute_data(acc_file_name, features_file_name, repetitions):
+
+    #________________________ Data Preprocessing ___________________________________
+    
     data = pd.read_csv(features_file_name)
     data = data.drop(["filename"], axis=1)  # we dont need the column with the filenames anymore
+    
     genre_data = data.iloc[:, -1]  # the last column(genre)
     all_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
-    # only the first and second columns (chroma_stft)
-    chro_data = data.iloc[:, [0, 1]]
-    # only the third and fourth columns (spectral_centroid)
-    spec_data = data.iloc[:, [2, 3]]
-    # only the fifth and sixth columns (zero_crossing_rate)
-    zero_data = data.iloc[:, [4, 5]]
-    # only the last 40 columns (mfcc)
-    mfcc_data = data.iloc[:, 6:46]
+    chro_data = data.iloc[:, 0]  # only the first columnn (chroma_stft)
+    spec_data = data.iloc[:, 1]  # only the second columnn (spectral_centroid)
+    zero_data = data.iloc[:, 2]  # only the third columnn (zero_crossing_rate)
+    mfcc_data = data.iloc[:, 3:23]  # only the last 20 columnns (mfcc)
+    
     encoder = LabelEncoder()
     y = encoder.fit_transform(genre_data)
     scaler = StandardScaler()
-    X_all = scaler.fit_transform(np.array(all_features_data, dtype=float))
-    X_chro = scaler.fit_transform(
-        np.array(chro_data, dtype=float))  # reshape is necessary for 1-column data
-    X_spec = scaler.fit_transform(np.array(spec_data, dtype=float))
-    X_zero = scaler.fit_transform(np.array(zero_data, dtype=float))
+    
+    X_all  = scaler.fit_transform(np.array(all_features_data, dtype=float))
+    X_chro = scaler.fit_transform(np.array(chro_data, dtype=float).reshape(-1, 1))  # reshape is necessary for 1-column data
+    X_spec = scaler.fit_transform(np.array(spec_data, dtype=float).reshape(-1, 1))
+    X_zero = scaler.fit_transform(np.array(zero_data, dtype=float).reshape(-1, 1))
     X_mfcc = scaler.fit_transform(np.array(mfcc_data, dtype=float))
+    
     feature_list = [[X_all, "all"], [X_chro, "chroma_stft"], [X_spec, "spectral_centroid"],
                     [X_zero, "zero_crossing_rate"], [X_mfcc, "mfcc"]]
+    
+    #______________________ Learning Initilization _____________________________________
+    
     lr = LogisticRegression()
     mlp = MLPClassifier(random_state=3)
-    rf = RandomForestClassifier(random_state=3)
+    rf = RandomForestClassifier()
     svml = svm.SVC(kernel="linear")
     svmp = svm.SVC(kernel="poly")
     svmr = svm.SVC(kernel="rbf")
     svms = svm.SVC(kernel="sigmoid")
+    
     classifier_list = [[lr, "LogisticRegression"], [mlp, "MLPClassifier"], [rf, "RandomForestClassifier"],
                        [svml, "SupportVectorMachine(linear)"], [svmp, "SupportVectorMachine(poly)"],
                        [svmr, "SupportVectorMachine(rbf)"], [svms, "SupportVectorMachine(sigmoid)"]]
+
+    #________________________________ save ______________________________________________
 
     for X, feat_name in feature_list:
         for classifier, classifier_name in classifier_list:
@@ -98,17 +106,15 @@ def compute_data(acc_file_name, features_file_name, repetitions):
 
 # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
 # Here 25 repetitions (different train_test_splits) are used.
-# file_name = "complete_data_4_features.csv"
-acc_file_name = "accuracy_overview_whole_songs.csv"
 features_file_name = "all_features_whole_songs.csv"
+acc_file_name = "11test.csv"
+#
+# write_headline(acc_file_name)
+# compute_data(acc_file_name, file_name, 25)
+
+# # Could take some minutes.
 
 
-write_headline(acc_file_name)
-compute_data(acc_file_name, features_file_name, 25)
-
-# Could take some minutes.
-
-
-#  Prints out how long the program was running, in seconds.
-endtime = time.time()
-print("{:5.3f}s".format(endtime - starttime))
+# #  Prints out how long the program was running, in seconds.
+# endtime = time.time()
+# print("{:5.3f}s".format(endtime - starttime))

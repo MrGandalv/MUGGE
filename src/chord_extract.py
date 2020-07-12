@@ -20,17 +20,17 @@ starttime = time.time()
 
 #  The following function is an auxiliary function for the main function 'write_feature_file'.
 #  Here, for the 'mode' parameter only the states "w" (write) and "a" (append) are admissible.
-#  If "a" is committed, the function opens the .csv file 'features_file_name', and 'line_to_add' is added
-#  to the end of the file (in a new line). Gives an error, when 'features_file_name' does not exist.
-#  If "w" is committed, it creates an empty .csv file with the name 'features_file_name', and 'line_to_add' is added
+#  If "a" is committed, the function opens the .csv file 'file_name', and 'line_to_add' is added
+#  to the end of the file (in a new line). Gives an error, when 'file_name' does not exist.
+#  If "w" is committed, it creates an empty .csv file with the name 'file_name', and 'line_to_add' is added
 #  in the file (in the first line).
 #  Important: In writting mode, an existing file with the same name will be erased/ overwritten.
-#  The given file 'features_file_name' must be a .csv file.
+#  The given file 'file_name' must be a .csv file.
 #  The "with" statement ensures that the file will automatically be closed afterwards.
 
 
 def append_data_to_file(features_file_name, line_to_add, mode):
-    assert features_file_name.endswith(".csv"), "The file 'features_file_name' must be a .csv file."
+    assert features_file_name.endswith(".csv"), "The file 'file_name' must be a .csv file."
     assert mode in ["w", "a"], "The 'mode'-parameter does not follow the intended function of this script. "
     file = open(features_file_name, mode, newline="")
     with file:
@@ -39,15 +39,15 @@ def append_data_to_file(features_file_name, line_to_add, mode):
 
 
 #  The 'write_feature_file' is the main function of this script.
-#  The functions goal is to create a .csv file named 'features_file_name', with specified music features of
+#  The functions goal is to create a .csv file named 'file_name', with specified music features of
 #  a given dataset of songs in it. Usually, the file can then be found in the directory of your current python
 #  project. The created file starts with a headline, consisting of "filename", followed by the names of
 #  the extracted features and ending with "label", i.e. the genre of the song. Every other row persists of the
 #  extracted data of one song, structured in the same order as the headline.
 #
-#  The parameters 'features_file_name' (name of the desired .csv file)
+#  The parameters 'file_name' (name of the desired .csv file)
 #  and 'dataset_path' (the path, where the dataset is stored) should be committed as strings, e.g.
-#  features_file_name= "music_features.csv",
+#  file_name= "music_features.csv",
 #  dataset_path = "C:/Users/MaxM/PycharmProjects/music_project/music_data".
 #
 #  With the list of strings 'genrelist' and 'names' one can specify, which genres from the database
@@ -65,10 +65,10 @@ def append_data_to_file(features_file_name, line_to_add, mode):
 #  the wanted format and information.
 #
 #  The last (string-)parameter 'overwrite' should be used in the following way: Only if explicitly "Yes" is
-#  plugged in, an existing file with the same name as 'features_file_name' can be overwritten/erased. Thus, the
+#  plugged in, an existing file with the same name as 'file_name' can be overwritten/erased. Thus, the
 #  goal is here to prevent an accidental loss of an existing file, by setting, e.g. overwrite="".
 #  Another option is to commit overwrite="Append". In this case one can extend an existing file with
-#  the same name as 'features_file_name' by more data. This option is only useful to append different genres
+#  the same name as 'file_name' by more data. This option is only useful to append different genres
 #  step by step, not to add more features to an existing file, because then the structure of the file wont
 #  be consistent.
 #
@@ -92,7 +92,7 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
     headline += " label"
     assert max(ch, cha) > 0, "There are no supported features given in 'names'."
     if overwrite == "Append":
-        assert does_features_file_exist, "Attention: Append not possible, because 'features_file_name' cant be found. "
+        assert does_features_file_exist, "Attention: Append not possible, because 'file_name' cant be found. "
     else:
         append_data_to_file(features_file_name, headline.split(), "w")
     for genre in genrelist:
@@ -156,7 +156,7 @@ my_dataset_path = "C:/Users/JD/PycharmProjects/newstart/data_music"
 #  Now the following command should create a data file, which consists of a headline and 5 (rsp.23 because of mfcc)
 #  features from 100 songs per genre:
 #
-#write_feature_file(features_file_name, my_dataset_path, genrelist, names, 100, "")
+#write_feature_file(file_name, my_dataset_path, genrelist, names, 100, "")
 #
 #  should take around 30 seconds.
 

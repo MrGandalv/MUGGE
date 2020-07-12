@@ -53,7 +53,7 @@ def write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name
 
 
 # This is the main function of this script. The goal is to write computed accuracies of different classifiers and
-# features in a .csv file. Therefore, at first the feature data must be read form the file 'features_file_name' and
+# features in a .csv file. Therefore, at first the feature data must be read form the file 'file_name' and
 # scaled/normalized. This data will be saved in the list 'feature_list', always paired with its description.
 # Afterwards some classifiers are initialized and saved in a list, where again each of them is paired with its
 # name/description. In the end, it only remains to call the function 'write_accuracy_to_file' for every feature and
@@ -90,15 +90,15 @@ def compute_data(acc_file_name, features_file_name, repetitions):
 
 # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
 # Here 25 repetitions (different train_test_splits) are used.
-# features_file_name = "complete_data_4_features.csv"
+# file_name = "complete_data_4_features.csv"
 # acc_file_name = "accuracy_late_scaling.csv"
-# features_file_name = "all_features_whole_songs.csv"
+# file_name = "all_features_whole_songs.csv"
 acc_file_name = "accuracy_chords_both_matrices.csv"
 features_file_name = "chords_files/chord_feature.csv"
 
 # #
 # write_headline(acc_file_name)
-# compute_data(acc_file_name, features_file_name, 25)
+# compute_data(acc_file_name, file_name, 25)
 
 # Could take some minutes.
 
