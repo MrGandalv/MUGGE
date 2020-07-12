@@ -24,10 +24,10 @@ def prepro(input_file):
         print("Invalid format")
 
 
-def record():
+def record(duration):
     """ Record as WAV then convert to NumPy array to return."""
     fs = 44100  # Sample rate
-    seconds = 30  # Duration of recording
+    seconds = duration  # Duration of recording
     myrecording = sd.rec(int(seconds * fs), samplerate=fs, channels=2)
     print(f"Recording for {seconds} sec.:")
     sd.wait()  # Wait until recording is finished
