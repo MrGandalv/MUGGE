@@ -130,13 +130,22 @@ class Box:
             data = pd.read_csv(feature_data_file)
         else:
             data = pd.read_csv(self.features_file_name)
-        # we dont need the column with the filenames anymore
-        data = data.drop(["filename"], axis=1)
-        data = np.array(data.values.tolist())
 
-        data_genre = data[:, -1].copy()
-        # print(data[:,-1])
-        data = np.array(data[:, :-1].copy(), dtype=float)
+        data_genre = data.iloc[:, -1]  # the last column(genre)
+        four_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
+        c_data = pd.read_csv("chord_feature.csv")
+        chords_data = c_data.iloc[:, :-1]  # every data except the last column(genre)
+        second_matrix = [0] + list(range(145, 289))  # auxiliary list to access only the second transition matrix
+        chords_data = chords_data.iloc[:, second_matrix]
+        all_incl_chords = pd.merge(four_features_data, chords_data, on="filename")
+        all_incl_chords = all_incl_chords.drop(["filename"],
+                                               axis=1)  # we dont need the column with the filenames anymore
+
+
+        all_incl_chords = np.array(all_incl_chords.values.tolist(), dtype=float)
+
+
+
         feature_data = []
 
         self.scaler = {}
@@ -145,21 +154,24 @@ class Box:
         feature_data.append(data_genre)
 
         # every data except the last column(genre)
-        feature_data.append(data)
+        feature_data.append(all_incl_chords)
         # print(feature_data[-1])
         self.scaler.update({'all': StandardScaler().fit(feature_data[-1])})
         # only the first and second columns (chroma_stft)
-        feature_data.append(data[:, [0, 1]])
+        feature_data.append(all_incl_chords[:, [0, 1]])
         self.scaler.update({'chroma_stft': StandardScaler().fit(feature_data[-1])})
         # only the third and fourth columns (spectral_centroid)
-        feature_data.append(data[:, [2, 3]])
+        feature_data.append(all_incl_chords[:, [2, 3]])
         self.scaler.update({'spectral_centroid': StandardScaler().fit(feature_data[-1])})
         # only the fifth and sixth columns (zero_crossing_rate)
-        feature_data.append(data[:, [4, 5]])
+        feature_data.append(all_incl_chords[:, [4, 5]])
         self.scaler.update({'zero_crossing_rate': StandardScaler().fit(feature_data[-1])})
-        # only the last 40 columns (mfcc)
-        feature_data.append(data[:, 6:46])
+        # only the next 40 columns (mfcc)
+        feature_data.append(all_incl_chords[:, 6:46])
         self.scaler.update({'mfcc': StandardScaler().fit(feature_data[-1])})
+        # only the last 144 columns (chords))
+        feature_data.append(all_incl_chords[:, 47:190])
+        self.scaler.update({'chords': StandardScaler().fit(feature_data[-1])})
 
         self.encoder = LabelEncoder().fit(feature_data[0])
         y = self.encoder.transform(feature_data[0])
@@ -257,6 +269,22 @@ class Box:
             for mfeat in mfcc:
                 feature_list.append(np.mean(mfeat))
                 feature_list.append(np.var(mfeat))
+        if feature == 'chords' or feature == 'all':
+            # Code for the Transition Matrix_all
+            chromagram = librosa.feature.chroma_stft(y=y, sr=sr)
+            chromagram_columns_number = len(chromagram[0])
+            transition_matrix_a = np.zeros((12, 12))
+            for j in range(chromagram_columns_number - 1):
+                transition_matrix_b = chromagram[:, j] * np.transpose([chromagram[:, j + 1]])
+                transition_matrix = transition_matrix_a + transition_matrix_b
+                transition_matrix_a = transition_matrix
+            for k in range(12):
+                if np.sum(transition_matrix[k, :]) != 0:
+                    transition_matrix[k, :] = transition_matrix[k, :] / np.sum(transition_matrix[k, :])
+            for n in range(12):
+                for m in range(12):
+                    feature_list.append(round(transition_matrix[n][m], 6))
+
             # now load the model for the given feature
         # print(feature_list)
 
@@ -436,7 +464,7 @@ class BoxInput(Box):
                 offset = 0
             file_name = input('Enter audio file(WAV or MP3):')
             music_array = prepro(file_name)
-        print( duration, offset)
+
         return os.getcwd() + '\\output.wav', duration, offset
 
 
@@ -498,7 +526,7 @@ def main():
     for Box in Programm[1:-1]:
         print(' ')
         # print(f'Training of {Box.Id}')
-        # Box.train([feature_list, y], repetitions=10)
+        Box.train([feature_list, y], repetitions=2)
         # print(Box.test([feature_list, y]))
         print(Box.classify(music_file, create_file=True, user=False, duration=duration, offset=offset))
 
