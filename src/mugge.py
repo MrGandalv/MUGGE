@@ -12,6 +12,10 @@ import os
 # import matplotlib.pyplot as plt
 
 import librosa
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
 
 from functools import reduce  # only in Python 3
 import time
@@ -26,12 +30,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
+#import tensorflow as tf
+#from tensorflow.keras.models import Sequential
+#from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
 
 # multiprocessing and multithreading
-import concurrent.futures
+#import concurrent.futures
 
 # other scripts
 
@@ -50,10 +54,10 @@ from record_music import prepro, record
 class Box:
     """This class is the parent of all box-method-objects."""
 
-    path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
+    path_to_store = 'C:/Users/stell/Desktop/MLproject/MUGGE/src'
     # path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
     # if not necessary here then move to input box
-    path_of_data = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres'
+    path_of_data = 'C:/Users/stell/Desktop/MLproject/dataset'
     # path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
 
     # list of all features that are used
@@ -179,8 +183,7 @@ class Box:
         for epoch in tqdm(range(repetitions)):
             for X, feature in feature_list:
                 # print(f'Epoch: {epoch+1}, feature: {feature}')
-                X_train, X_test, y_train, y_test = train_test_split(
-                    X, y, test_size=0.2, random_state=42 + 666)
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
                 self.model.fit(X_train, y_train)
                 num_of_music_files = len(X)
                 save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch + 1}_{self.time_stamp}.pkl'
@@ -293,6 +296,47 @@ class Box:
                               save_model_name, mode='csv')
 
         return prediction[0]
+    def metrics_plot(self,test_data, feature='all',load_model_file='', encoder_file=''):
+        """Creates plots of useful metrics"""
+        if not os.path.isfile(encoder_file):
+            if not 'self.encoder' in locals():
+                with open(self.path_to_store+self.save_encoder_name, 'rb') as f:
+                    self.encoder = pickle.load(f)
+
+        if not os.path.isfile(load_model_file):
+            try:
+                load.model_file=self.path_to_store + self.saved_model_files[feature]
+            except:
+                load_model_file=self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_999_files_10.pkl' 
+        else:
+            feature= load_model_file.split('/')[-1].split('_')[0]
+        assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
+
+        feature_list,y =test_data
+        feature_list={i: k for (k,i) in feature_list}
+        X=feature_list[feature]
+        with open(load_model_file,'rb') as f:
+            self.model=pickle.load(f)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+        yhat = self.model.predict(X_test)
+        cf=confusion_matrix(y_test,yhat)
+        appearance=[y_test.tolist().count(k) for k in range(0,10)]
+        cf_dummy =[]
+        for line in cf:
+            cf_dummy.append([pred/app for pred, app in zip(line, appearance)])
+        cf = cf_dummy
+        fig = plt.figure(figsize=(10,7))
+        ax = fig.add_subplot(111)
+        sns.heatmap(cf,annot=True)
+        labels = self.encoder.inverse_transform([0,1,2,3,4,5,6,7,8,9])
+        ax.set_xticklabels(labels)
+        ax.set_yticklabels(labels)
+        plt.setp(ax.get_yticklabels(),rotation=45)
+        plt.title(f'{self.name}')
+        plt.xlabel('Predicted')
+        plt.ylabel('Truth')
+        plt.show()
+    
 
 
 # ____________________________________ Method Boxes _________________________________________________________
@@ -311,57 +355,58 @@ class BoxLogisticRegression(Box):
         self.model = LogisticRegression()
 
 
-class BoxTfNN(Box):
-    """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
+#class BoxTfNN(Box):
+ #   """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
+#
+ #   name = 'TfNeuralNetwork'
+#
+ #   def __init__(self, number, arch_box):
+#
+ #       super().__init__(number)
+  #      self.Id = f'Box_{self.box_number}_{self.name}'
+   #     # only take the last 5 digits for the unique name
+    #    self.creation_time_string = f'{time.time()}'[-6:-1]
+     #   self.model = Sequential()
+#        self.model.add(Flatten())
+ #       for k in arch_box:
+  #          self.model.add(Dense(k[0], activation=k[1]))
+   #     self.model.add(Dense(10, activation=tf.nn.softmax))
+    #    self.model.compile(
+     #       optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+#
+  #  def train(self, training_data):
+ #       """ Place for the documentation """
+#
+ #       (x_train, y_train) = training_data
+  #      self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
+   #     cp_callback = tf.keras.callbacks.ModelCheckpoint(
+    #        filepath=self.save_path, save_weights_only=True, verbose=1)
+     #   self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
+#
+ #   def test(self, training_data, load_path=None):
+  #      """ Place for the documentation """
+#
+ #       if load_path is None:
+  #          if 'self.save_path' in locals():
+   #             load_path = self.save_path
+    #            self.model.load_weights(load_path)
+     #   (x_test, y_test) = training_data
+      #  loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
+  #      print(f'Accuracy: {100 * acc}%')
 
-    name = 'TfNeuralNetwork'
-
-    def __init__(self, number, arch_box):
-
-        super().__init__(number)
-        self.Id = f'Box_{self.box_number}_{self.name}'
-        # only take the last 5 digits for the unique name
-        self.creation_time_string = f'{time.time()}'[-6:-1]
-        self.model = Sequential()
-        self.model.add(Flatten())
-        for k in arch_box:
-            self.model.add(Dense(k[0], activation=k[1]))
-        self.model.add(Dense(10, activation=tf.nn.softmax))
-        self.model.compile(
-            optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    def train(self, training_data):
-        """ Place for the documentation """
-
-        (x_train, y_train) = training_data
-        self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
-        cp_callback = tf.keras.callbacks.ModelCheckpoint(
-            filepath=self.save_path, save_weights_only=True, verbose=1)
-        self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
-
-    def test(self, training_data, load_path=None):
-        """ Place for the documentation """
-
-        if load_path is None:
-            if 'self.save_path' in locals():
-                load_path = self.save_path
-                self.model.load_weights(load_path)
-        (x_test, y_test) = training_data
-        loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
-        print(f'Accuracy: {100 * acc}%')
-
-    def classify(self, pic):
-        """ Place for the documentation """
-        print(np.argmax(self.model.predict(np.array([pic]))))
+   # def classify(self, pic):
+    #    """ Place for the documentation """
+     #   print(np.argmax(self.model.predict(np.array([pic]))))
 
 
 class BoxSupportVectorMachine(Box):
-    name = 'SupportVectorMachine'
+    
 
     def __init__(self, number, mode):
         """mode is a string"""
         super().__init__(number)
         self.mode = mode  # linear, poly, rbf, sigmoid
+        self.name=f'{self.mode}_SupportVectorMachine'
         self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
         self.model = svm.SVC(kernel=self.mode)
 
@@ -455,6 +500,9 @@ def save_test_overall_model():
 #                            MAIN
 # _____________________________________________________________________
 
+
+
+    
 def main():
     """ Place for the documentation """
     Programm = [BoxInput(1),
@@ -466,20 +514,24 @@ def main():
                 BoxMLPClassifier(7, 'notTF'),
                 BoxRandomForestClassifier(8, 'Endor'),
                 BoxDecision(9, 'max')]
-
+    # Programm[0].get_features(50, 'y')
     feature_list, y = Programm[0].preprocess(feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
-    # print(feature_list)
-    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
+    # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/metal/metal.00002.au'
     # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/rock/rock.00011.wav"
-    # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'#Programm[0].decide()
+    # files = [
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/all_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/chroma_stft_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/mfcc_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/spectral_centroid_for_999_files_10_2020630212932.pkl',
+    #     'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/model_Box_2_LogisticRegression/zero_crossing_rate_for_999_files_10_2020630212932.pkl']
 
     for Box in Programm[1:-1]:
         print(' ')
-        # print(f'Training of {Box.Id}')
-        # Box.train([feature_list, y], repetitions=10)
-        # print(Box.test([feature_list, y]))
-        print(Box.classify(music_file, create_file=True, user=False))
-
+        #print(f'Training of {Box.Id}')
+        #Box.train([feature_list, y], repetitions=10)
+        #print(Box.test([feature_list, y]))
+        # print(Box.classify(music_file, create_file=True))
+        Box.metrics_plot([feature_list, y])
 
 if __name__ == '__main__':
     main()
