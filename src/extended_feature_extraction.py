@@ -127,21 +127,22 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
 
 
 #               -----Example----
-features_file_name = "all_features_whole_songs.csv"
-# dataset_path = "C:/Users/MaxM/PycharmProjects/music_project/data_music"
-genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split()
-# genrelist = "rock pop disco blues jazz".split()
-featurelist = "chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
-my_dataset_path = "C:/Users/JD/PycharmProjects/newstart/data_music"
-#  Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
-#  features from 5 songs per genre:
-#
-write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 100, "")
-#
-#  should take around 30 seconds.
+if __name__ == '__main__':
+    features_file_name = "all_features_whole_songs.csv"
+    # dataset_path = "C:/Users/MaxM/PycharmProjects/music_project/data_music"
+    genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split()
+    # genrelist = "rock pop disco blues jazz".split()
+    featurelist = "chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
+    my_dataset_path = "C:/Users/JD/PycharmProjects/newstart/data_music"
+    #  Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
+    #  features from 5 songs per genre:
+    #
+    #write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 100, "")
+    #
+    #  should take around 30 seconds.
 
-#  Prints out how long the program was running, in seconds.
-endtime = time.time()
-print("{:5.3f}s".format(endtime - starttime))
+    #  Prints out how long the program was running, in seconds.
+    endtime = time.time()
+    print("{:5.3f}s".format(endtime - starttime))
 
-#  main source: https://towardsdatascience.com/music-genre-classification-with-python-c714d032f0d8
+    #  main source: https://towardsdatascience.com/music-genre-classification-with-python-c714d032f0d8

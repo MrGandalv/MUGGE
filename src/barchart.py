@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-featurelist = "all_feat_combined chroma_stft spectral_centroid zero_crossing_rate mfcc".split()
+featurelist = "all_feat_combined chroma_stft spectral_centroid zero_crossing_rate mfcc all_incl._chords chords".split()
 
 labels = featurelist
 
-data = pd.read_csv("accuracy_overview_whole_songs.csv")
+data = pd.read_csv("accuracy_10k.csv")
 
 accuracies = data.iloc[:, 3]
 
@@ -18,13 +18,13 @@ SVMP_score = []
 SVMR_score = []
 SVMS_score = []
 for j in range(len(featurelist)):
-    LR_score.append(round(accuracies[7 * j], 3))
-    MLP_score.append(round(accuracies[7 * j + 1], 3))
-    RF_score.append(round(accuracies[7 * j + 2], 3))
-    SVML_score.append(round(accuracies[7 * j + 3], 3))
-    SVMP_score.append(round(accuracies[7 * j + 4], 3))
-    SVMR_score.append(round(accuracies[7 * j + 5], 3))
-    SVMS_score.append(round(accuracies[7 * j + 6], 3))
+    LR_score.append(round(accuracies[7 * j], 2))
+    MLP_score.append(round(accuracies[7 * j + 1], 2))
+    RF_score.append(round(accuracies[7 * j + 2], 2))
+    SVML_score.append(round(accuracies[7 * j + 3], 2))
+    SVMP_score.append(round(accuracies[7 * j + 4], 2))
+    SVMR_score.append(round(accuracies[7 * j + 5], 2))
+    SVMS_score.append(round(accuracies[7 * j + 6], 2))
 
 x = np.arange(len(labels))  # the label locations
 width = 0.1  # the width of the bars

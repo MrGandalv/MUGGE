@@ -95,20 +95,18 @@ def compute_data(acc_file_name, features_file_name, repetitions):
         for classifier, classifier_name in classifier_list:
             write_accuracy_to_file(acc_file_name, classifier_name, classifier, feat_name, X, y, repetitions)
 
+if __name__ == '__main__':
+    # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
+    # Here 25 repetitions (different train_test_splits) are used.
+    # features_file_name = "complete_data_4_features.csv"
+    acc_file_name = "accuracy_10k.csv"
+    features_file_name = "feature_extraction_10k.csv"
+    write_headline(acc_file_name)
+    compute_data(acc_file_name, features_file_name, 2)
 
-# Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
-# Here 25 repetitions (different train_test_splits) are used.
-# file_name = "complete_data_4_features.csv"
-acc_file_name = "accuracy_overview_whole_songs.csv"
-features_file_name = "all_features_whole_songs.csv"
-
-
-write_headline(acc_file_name)
-compute_data(acc_file_name, features_file_name, 25)
-
-# Could take some minutes.
+    # Could take some minutes.
 
 
-#  Prints out how long the program was running, in seconds.
-endtime = time.time()
-print("{:5.3f}s".format(endtime - starttime))
+    #  Prints out how long the program was running, in seconds.
+    endtime = time.time()
+    print("{:5.3f}s".format(endtime - starttime))

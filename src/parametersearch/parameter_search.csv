@@ -1,0 +1,13 @@
+T,h,e, ,b,e,s,t, ,p,a,r,a,m,e,t,e,r,s, ,a,r,e,:, ,{,',a,l,p,h,a,',:, ,0,.,5,",", ,',s,o,l,v,e,r,',:, ,',a,d,a,m,',}
+M,e,a,n,:, ,0,.,7,1,6,6,9,3,4,6,7,3,3,6,6,8,3,5, ,(,S,t,d,:, ,0,.,0,2,5,0,9,7,0,7,7,2,4,5,7,8,0,0,1,), ,f,o,r, ,{,',a,l,p,h,a,',:, ,0,.,0,0,0,1,",", ,',s,o,l,v,e,r,',:, ,',a,d,a,m,',}
+M,e,a,n,:, ,0,.,7,2,0,7,0,3,5,1,7,5,8,7,9,3,9,7, ,(,S,t,d,:, ,0,.,0,1,3,9,2,2,6,0,9,1,1,1,3,9,0,5,), ,f,o,r, ,{,',a,l,p,h,a,',:, ,0,.,5,",", ,',s,o,l,v,e,r,',:, ,',a,d,a,m,',}
+The,best,parameters,are:,{'alpha':,"0.5,",'solver':,'adam'}
+M,e,a,n,:, ,0,.,7,1,1,6,8,8,4,4,2,2,1,1,0,5,5,3, ,(,S,t,d,:, ,0,.,0,2,0,0,0,2,4,2,0,2,4,6,9,8,4,5,3,), ,f,o,r, ,{,',a,l,p,h,a,',:, ,0,.,5,",", ,',s,o,l,v,e,r,',:, ,',a,d,a,m,',}
+The_best_,parameters_,are,{'alpha':,"0.5,",'solver':,'adam'}
+Mean:,0.7237638190954774,(Std:,0.0287203114799925),for,{'alpha':,"0.5,",'solver':,'adam'}
+The_best_parameters_are,{'alpha':,"0.5,",'solver':,'adam'}
+Mean:,0.73774,(Std:,0.01352),for,{'alpha':,"0.5,",'solver':,'adam'}
+SCORE:0.7096331658291456,the_best_parameters_are{'alpha':,"0.5,",'solver':,'adam'}
+Mean:,0.70963,(Std:,0.04433),for,{'alpha':,"0.5,",'solver':,'adam'}
+BESTSCORE:,0.7107,the_best_parameters_are:,{'alpha':,"0.5,",'solver':,'adam'}
+Mean:,0.7107,(Std.:,0.0137),for,{'alpha':,"0.5,",'solver':,'adam'}

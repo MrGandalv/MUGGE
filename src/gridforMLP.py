@@ -55,7 +55,7 @@ def find_the_best():
     data = pd.read_csv("all_features_whole_songs.csv")
     genre_data = data.iloc[:, -1]  # the last column(genre)
     four_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
-    c_data = pd.read_csv("chords_files/chord_feature.csv")
+    c_data = pd.read_csv("chord_feature_10k_repaired.csv)
     chords_data = c_data.iloc[:, :-1]  # every data except the last column(genre)
     second_matrix = [0] + list(range(145, 289))
     chords_data = chords_data.iloc[:, second_matrix]
@@ -87,5 +87,5 @@ def find_the_best():
     for X, name in data_list:
         find_best_param(f"parameter_search_mlp_{name}.csv", cv, X, y)
 
-
-#find_the_best()
+if __name__ == '__main__':
+    find_the_best()
