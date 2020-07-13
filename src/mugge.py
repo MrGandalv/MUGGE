@@ -9,12 +9,10 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import os
-# import matplotlib.pyplot as plt
 
 import librosa
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix
 
 
 from functools import reduce  # only in Python 3
@@ -24,15 +22,16 @@ import pickle
 # machine learning relevant packages
 
 from sklearn import svm
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier, AdaBoostClassifier, VotingClassifier, BaggingClassifier
 
-#import tensorflow as tf
-#from tensorflow.keras.models import Sequential
-#from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
 
 # multiprocessing and multithreading
 #import concurrent.futures
@@ -355,48 +354,47 @@ class BoxLogisticRegression(Box):
         self.model = LogisticRegression()
 
 
-#class BoxTfNN(Box):
- #   """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
-#
- #   name = 'TfNeuralNetwork'
-#
- #   def __init__(self, number, arch_box):
-#
- #       super().__init__(number)
-  #      self.Id = f'Box_{self.box_number}_{self.name}'
-   #     # only take the last 5 digits for the unique name
-    #    self.creation_time_string = f'{time.time()}'[-6:-1]
-     #   self.model = Sequential()
-#        self.model.add(Flatten())
- #       for k in arch_box:
-  #          self.model.add(Dense(k[0], activation=k[1]))
-   #     self.model.add(Dense(10, activation=tf.nn.softmax))
-    #    self.model.compile(
-     #       optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-#
-  #  def train(self, training_data):
- #       """ Place for the documentation """
-#
- #       (x_train, y_train) = training_data
-  #      self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
-   #     cp_callback = tf.keras.callbacks.ModelCheckpoint(
-    #        filepath=self.save_path, save_weights_only=True, verbose=1)
-     #   self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
-#
- #   def test(self, training_data, load_path=None):
-  #      """ Place for the documentation """
-#
- #       if load_path is None:
-  #          if 'self.save_path' in locals():
-   #             load_path = self.save_path
-    #            self.model.load_weights(load_path)
-     #   (x_test, y_test) = training_data
-      #  loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
-  #      print(f'Accuracy: {100 * acc}%')
+class BoxTfNN(Box):
+   """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
 
-   # def classify(self, pic):
-    #    """ Place for the documentation """
-     #   print(np.argmax(self.model.predict(np.array([pic]))))
+   name = 'TfNeuralNetwork'
+
+   def __init__(self, number, arch_box):
+
+       super().__init__(number)
+       self.Id = f'Box_{self.box_number}_{self.name}'
+       # only take the last 5 digits for the unique name
+       self.creation_time_string = f'{time.time()}'[-6:-1]
+       self.model = Sequential()
+       self.model.add(Flatten())
+       for k in arch_box:
+           self.model.add(Dense(k[0], activation=k[1]))
+       self.model.add(Dense(10, activation=tf.nn.softmax))
+       self.model.compile(
+           optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+   def train(self, training_data):
+       """ Place for the documentation """
+
+       (x_train, y_train) = training_data
+       self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
+       cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.save_path, save_weights_only=True, verbose=1)
+       self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
+
+   def test(self, training_data, load_path=None):
+       """ Place for the documentation """
+
+       if load_path is None:
+           if 'self.save_path' in locals():
+               load_path = self.save_path
+               self.model.load_weights(load_path)
+       (x_test, y_test) = training_data
+       loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
+       print(f'Accuracy: {100 * acc}%')
+
+   def classify(self, pic):
+       """ Place for the documentation """
+       print(np.argmax(self.model.predict(np.array([pic]))))
 
 
 class BoxSupportVectorMachine(Box):
@@ -500,9 +498,6 @@ def save_test_overall_model():
 #                            MAIN
 # _____________________________________________________________________
 
-
-
-    
 def main():
     """ Place for the documentation """
     Programm = [BoxInput(1),
