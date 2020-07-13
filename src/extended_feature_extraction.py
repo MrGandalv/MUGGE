@@ -137,7 +137,7 @@ if __name__ == '__main__':
     #  Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
     #  features from 5 songs per genre:
     #
-    write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 100, "")
+    #write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 100, "")
     #
     #  should take around 30 seconds.
 

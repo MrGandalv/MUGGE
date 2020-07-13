@@ -99,12 +99,12 @@ if __name__ == '__main__':
     # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
     # Here 25 repetitions (different train_test_splits) are used.
     # features_file_name = "complete_data_4_features.csv"
-    acc_file_name = "accuracy_overview_whole_songs.csv"
-    features_file_name = "all_features_whole_songs.csv"
+    acc_file_name = "accuracy_10k.csv"
+    features_file_name = "feature_extraction_10k.csv"
 
 
     write_headline(acc_file_name)
-    compute_data(acc_file_name, features_file_name, 25)
+    compute_data(acc_file_name, features_file_name, 2)
 
     # Could take some minutes.
 

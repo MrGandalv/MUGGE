@@ -120,7 +120,7 @@ class Box:
         """ Place for the documentation """
         # stuff before
         # ask for all of the arguments
-        self.features_file_name = f'{self.path_to_store}/all_features_whole_songs.py'
+        self.features_file_name = f'{self.path_to_store}/features_10k.py'
         write_feature_file(self.features_file_name, self.path_of_data, self.genrelist, self.feature_names,
                            max_songs_per_genre, overwrite)
 
@@ -133,7 +133,7 @@ class Box:
 
         data_genre = data.iloc[:, -1]  # the last column(genre)
         four_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
-        c_data = pd.read_csv("chord_feature.csv")
+        c_data = pd.read_csv("chord_feature_10k_repaired.csv")
         chords_data = c_data.iloc[:, :-1]  # every data except the last column(genre)
         second_matrix = [0] + list(range(145, 289))  # auxiliary list to access only the second transition matrix
         chords_data = chords_data.iloc[:, second_matrix]
@@ -141,10 +141,7 @@ class Box:
         all_incl_chords = all_incl_chords.drop(["filename"],
                                                axis=1)  # we dont need the column with the filenames anymore
 
-
         all_incl_chords = np.array(all_incl_chords.values.tolist(), dtype=float)
-
-
 
         feature_data = []
 
@@ -200,6 +197,20 @@ class Box:
                 self.saved_model_files.update({feature: save_model_name})
                 self.save_to_file(self.model, save_model_name, mode='pickle')
 
+    def train_for_classification(self, training_data, repetitions):
+        """ Place for the documentation """
+        feature_list, y = training_data
+        self.saved_model_files = {}
+        for X, feature in feature_list:
+            # print(f'Epoch: {epoch+1}, feature: {feature}')
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42 + 666)
+            self.model.fit(X_train, y_train)
+            num_of_music_files = len(X)
+            save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{self.time_stamp}.pkl'
+            self.saved_model_files.update({feature: save_model_name})
+            self.save_to_file(self.model, save_model_name, mode='pickle')
+
     # print(self.saved_model_files)
 
     def test(self, test_data, feature='all', load_model_file=''):
@@ -246,8 +257,13 @@ class Box:
         # extracting the features from the music file
 
         if user:
-            y = music_file
-            sr = 44100
+            y = np.reshape(music_file, -1)
+            # y = music_file[0, :]
+            # print(music_file)
+            # print(music_file[20])
+            # print(music_file.shape)
+            # print(y.shape)
+            sr = 22050
         else:
             y, sr = librosa.load(music_file, mono=True, duration=duration, offset=offset)
 
@@ -274,6 +290,7 @@ class Box:
             chromagram = librosa.feature.chroma_stft(y=y, sr=sr)
             chromagram_columns_number = len(chromagram[0])
             transition_matrix_a = np.zeros((12, 12))
+            transition_matrix = np.zeros((12, 12))
             for j in range(chromagram_columns_number - 1):
                 transition_matrix_b = chromagram[:, j] * np.transpose([chromagram[:, j + 1]])
                 transition_matrix = transition_matrix_a + transition_matrix_b
@@ -307,7 +324,7 @@ class Box:
                              self.saved_model_files[feature]
             except:
                 model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + reduce(
-                    lambda x, y: x + '_' + y, self.Id.split('_')[2:]) + '/' + feature + '_for_999_files_10.pkl'
+                    lambda x, y: x + '_' + y, self.Id.split('_')[2:]) + '/' + feature + '_for_9990_files.pkl'
 
         assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
         with open(model_file, 'rb') as f:
@@ -316,7 +333,7 @@ class Box:
         prediction = self.encoder.inverse_transform(self.model.predict(feature_list))
 
         # save the prediction
-        if create_file == True:
+        if create_file == True and user == False:
             music_name = music_file.split('/')[-1]
             prediction_list = [music_name, feature, prediction[0]]
             save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
@@ -462,10 +479,11 @@ class BoxInput(Box):
                     offset = 0
             except:
                 offset = 0
-            file_name = input('Enter audio file(WAV or MP3):')
-            music_array = prepro(file_name)
+            file_name = input('Enter audio file (WAV or MP3):')
+            music_array = prepro(file_name, duration, offset)
 
-        return os.getcwd() + '\\output.wav', duration, offset
+        # return os.getcwd() + '\\output.wav', duration, offset
+        return True, music_array, duration, offset
 
 
 # ____________________________________ Decision Box _________________________________________________________
@@ -507,28 +525,30 @@ def main():
     """ Place for the documentation """
     Programm = [BoxInput(1),
                 BoxLogisticRegression(2, 'hardcore'),
-                # BoxSupportVectorMachine(3, "linear"),
-                # BoxSupportVectorMachine(4, "poly"),
-                # BoxSupportVectorMachine(5, "rbf"),
-                # BoxSupportVectorMachine(6, "sigmoid"),
+                BoxSupportVectorMachine(3, "linear"),
+                BoxSupportVectorMachine(4, "poly"),
+                BoxSupportVectorMachine(5, "rbf"),
+                BoxSupportVectorMachine(6, "sigmoid"),
                 BoxMLPClassifier(7, 'notTF'),
                 BoxRandomForestClassifier(8, 'Endor'),
                 BoxDecision(9, 'max')]
-
     feature_list, y = Programm[0].preprocess(
-        feature_data_file=Programm[0].path_to_store + '/all_features_whole_songs.csv')
+        feature_data_file=Programm[0].path_to_store + '/features_10k.csv')
     # print(feature_list)
     # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
     music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/jazz/jazz.00011.wav"
     # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'
-    music_file, duration, offset = Programm[0].decide()
+    user = False
+    user, music_file, duration, offset = Programm[0].decide()
 
     for Box in Programm[1:-1]:
         print(' ')
         # print(f'Training of {Box.Id}')
-        Box.train([feature_list, y], repetitions=2)
+        # print(f"training...")
+        # Box.train_for_classification([feature_list, y], repetitions=1)
         # print(Box.test([feature_list, y]))
-        print(Box.classify(music_file, create_file=True, user=False, duration=duration, offset=offset))
+        print("Result:")
+        print(Box.classify(music_file, create_file=True, user=user, duration=duration, offset=offset))
 
 
 if __name__ == '__main__':

@@ -3,13 +3,13 @@ import pydub
 from pydub import AudioSegment
 
 
-def wav_to_array_file(input_file, normalized=False):
+def wav_to_array_file(input_file, duration=30, offset=0, normalized=False):
     """Convert an at least 70 seconds long WAV-file to a numpy array"""
     a = pydub.AudioSegment.from_wav(
         input_file)  # get array from AudioSegment object
-    slice = a[40000:70000]  # only take 30 sec. excerpt
+    # slice = a[40000:70000]  # only take 30 sec. excerpt
+    slice = a[1000 * offset:1000 * (offset + duration)]  # only take 30 sec. excerpt
     y = np.array(slice.get_array_of_samples())  # cast as NumPy array
-    y_new = []
 
     if a.channels == 2:
         y = y.reshape((-1, 2))
@@ -18,7 +18,7 @@ def wav_to_array_file(input_file, normalized=False):
     else:
         y_new = y
 
-    return y_new
+    return np.array(y_new, dtype=float)
 
 
 def wav_to_array_rec(input_file):
@@ -28,10 +28,10 @@ def wav_to_array_rec(input_file):
     return y
 
 
-def mp3_to_array(f, normalized=False):
+def mp3_to_array(input_file, duration=30, offset=0, normalized=False):
     """Convert an at least 70 seconds long MP3-file to a numpy array"""
     a = pydub.AudioSegment.from_mp3(f)
-    slice = a[40000:70000]  # get a slice from 40 to 70 seconds of an mp3
+    slice = a[1000 * offset:1000 * (offset + duration)]  # get a slice from 40 to 70 seconds of an mp3
     y = np.array(slice.get_array_of_samples())
     y_new = []
     if a.channels == 2:
@@ -40,7 +40,7 @@ def mp3_to_array(f, normalized=False):
 
     else:
         y_new = y
-    return y_new
+    return np.array(y_new, dtype=float)
 
 
 def mp3_to_wav(input_file):
