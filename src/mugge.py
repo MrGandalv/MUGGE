@@ -366,10 +366,11 @@ class Box:
         X = feature_list[feature]
         with open(load_model_file, 'rb') as f:
             self.model = pickle.load(f)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
-        yhat = self.model.predict(X_test)
-        cf = confusion_matrix(y_test, yhat)
-        appearance = [y_test.tolist().count(k) for k in range(0, 10)]
+        # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+
+        y_pred = self.model.predict(X)
+        cf = confusion_matrix(y, y_pred)
+        appearance = [y.tolist().count(k) for k in range(0, 10)]
         cf_dummy = []
         for line in cf:
             cf_dummy.append([pred / app for pred, app in zip(line, appearance)])
