@@ -14,7 +14,6 @@ import librosa
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 from functools import reduce  # only in Python 3
 import time
 import pickle
@@ -27,14 +26,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import RandomForestClassifier, StackingClassifier, AdaBoostClassifier, VotingClassifier, BaggingClassifier
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier, AdaBoostClassifier, VotingClassifier, \
+    BaggingClassifier
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Activation, Conv2D, MaxPooling2D
 
 # multiprocessing and multithreading
-#import concurrent.futures
+# import concurrent.futures
 
 # other scripts
 
@@ -52,7 +52,6 @@ from record_music import prepro, record
 class Box:
     """This class is the parent of all box-method-objects."""
 
-<<<<<<< HEAD
     # path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
     path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
     # path_to_store = 'C:/Users/stell/Desktop/MLproject/MUGGE/src'
@@ -346,47 +345,46 @@ class Box:
                               save_model_name, mode='csv')
         return prediction[0]
 
-    def metrics_plot(self,test_data, feature='all',load_model_file='', encoder_file=''):
+    def metrics_plot(self, test_data, feature='all', load_model_file='', encoder_file=''):
         """Creates plots of useful metrics"""
         if not os.path.isfile(encoder_file):
             if not 'self.encoder' in locals():
-                with open(self.path_to_store+self.save_encoder_name, 'rb') as f:
+                with open(self.path_to_store + self.save_encoder_name, 'rb') as f:
                     self.encoder = pickle.load(f)
 
         if not os.path.isfile(load_model_file):
             try:
-                load.model_file=self.path_to_store + self.saved_model_files[feature]
+                load.model_file = self.path_to_store + self.saved_model_files[feature]
             except:
-                load_model_file=self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_999_files_10.pkl' 
+                load_model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_9990_files.pkl'
         else:
-            feature= load_model_file.split('/')[-1].split('_')[0]
+            feature = load_model_file.split('/')[-1].split('_')[0]
         assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
 
-        feature_list,y =test_data
-        feature_list={i: k for (k,i) in feature_list}
-        X=feature_list[feature]
-        with open(load_model_file,'rb') as f:
-            self.model=pickle.load(f)
+        feature_list, y = test_data
+        feature_list = {i: k for (k, i) in feature_list}
+        X = feature_list[feature]
+        with open(load_model_file, 'rb') as f:
+            self.model = pickle.load(f)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
         yhat = self.model.predict(X_test)
-        cf=confusion_matrix(y_test,yhat)
-        appearance=[y_test.tolist().count(k) for k in range(0,10)]
-        cf_dummy =[]
+        cf = confusion_matrix(y_test, yhat)
+        appearance = [y_test.tolist().count(k) for k in range(0, 10)]
+        cf_dummy = []
         for line in cf:
-            cf_dummy.append([pred/app for pred, app in zip(line, appearance)])
+            cf_dummy.append([pred / app for pred, app in zip(line, appearance)])
         cf = cf_dummy
-        fig = plt.figure(figsize=(10,7))
+        fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111)
-        sns.heatmap(cf,annot=True)
-        labels = self.encoder.inverse_transform([0,1,2,3,4,5,6,7,8,9])
+        sns.heatmap(cf, annot=True)
+        labels = self.encoder.inverse_transform([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         ax.set_xticklabels(labels)
         ax.set_yticklabels(labels)
-        plt.setp(ax.get_yticklabels(),rotation=45)
+        plt.setp(ax.get_yticklabels(), rotation=45)
         plt.title(f'{self.name}')
         plt.xlabel('Predicted')
         plt.ylabel('Truth')
         plt.show()
-    
 
 
 # ____________________________________ Method Boxes _________________________________________________________
@@ -406,57 +404,57 @@ class BoxLogisticRegression(Box):
 
 
 class BoxTfNN(Box):
-   """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
+    """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
 
-   name = 'TfNeuralNetwork'
+    name = 'TfNeuralNetwork'
 
-   def __init__(self, number, arch_box):
+    def __init__(self, number, arch_box):
 
-       super().__init__(number)
-       self.Id = f'Box_{self.box_number}_{self.name}'
-       # only take the last 5 digits for the unique name
-       self.creation_time_string = f'{time.time()}'[-6:-1]
-       self.model = Sequential()
-       self.model.add(Flatten())
-       for k in arch_box:
-           self.model.add(Dense(k[0], activation=k[1]))
-       self.model.add(Dense(10, activation=tf.nn.softmax))
-       self.model.compile(
-           optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        super().__init__(number)
+        self.Id = f'Box_{self.box_number}_{self.name}'
+        # only take the last 5 digits for the unique name
+        self.creation_time_string = f'{time.time()}'[-6:-1]
+        self.model = Sequential()
+        self.model.add(Flatten())
+        for k in arch_box:
+            self.model.add(Dense(k[0], activation=k[1]))
+        self.model.add(Dense(10, activation=tf.nn.softmax))
+        self.model.compile(
+            optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-   def train(self, training_data):
-       """ Place for the documentation """
+    def train(self, training_data):
+        """ Place for the documentation """
 
-       (x_train, y_train) = training_data
-       self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
-       cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.save_path, save_weights_only=True, verbose=1)
-       self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
+        (x_train, y_train) = training_data
+        self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.save_path, save_weights_only=True, verbose=1)
+        self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
 
-   def test(self, training_data, load_path=None):
-       """ Place for the documentation """
+    def test(self, training_data, load_path=None):
+        """ Place for the documentation """
 
-       if load_path is None:
-           if 'self.save_path' in locals():
-               load_path = self.save_path
-               self.model.load_weights(load_path)
-       (x_test, y_test) = training_data
-       loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
-       print(f'Accuracy: {100 * acc}%')
+        if load_path is None:
+            if 'self.save_path' in locals():
+                load_path = self.save_path
+                self.model.load_weights(load_path)
+        (x_test, y_test) = training_data
+        loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
+        print(f'Accuracy: {100 * acc}%')
 
-   def classify(self, pic):
-       """ Place for the documentation """
-       print(np.argmax(self.model.predict(np.array([pic]))))
+    def classify(self, pic):
+        """ Place for the documentation """
+        print(np.argmax(self.model.predict(np.array([pic]))))
 
 
 class BoxSupportVectorMachine(Box):
-    
 
     def __init__(self, number, mode):
         """mode is a string"""
         super().__init__(number)
         self.mode = mode  # linear, poly, rbf, sigmoid
-        self.name=f'{self.mode}_SupportVectorMachine'
-        self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
+        self.name = f'{self.mode}_SupportVectorMachine'
+        self.Id = f'Box_{self.box_number}_{self.name}'
+        # self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
         self.model = svm.SVC(kernel=self.mode)
 
 
@@ -570,14 +568,14 @@ def save_test_overall_model():
 def main():
     """ Place for the documentation """
     Program = [BoxInput(1),
-                BoxLogisticRegression(2, 'hardcore'),
-                BoxSupportVectorMachine(3, "linear"),
-                BoxSupportVectorMachine(4, "poly"),
-                BoxSupportVectorMachine(5, "rbf"),
-                BoxSupportVectorMachine(6, "sigmoid"),
-                BoxMLPClassifier(7, 'notTF'),
-                BoxRandomForestClassifier(8, 'Endor'),
-                BoxDecision(9, 'max')]
+               BoxLogisticRegression(2, 'hardcore'),
+               BoxSupportVectorMachine(3, "linear"),
+               BoxSupportVectorMachine(4, "poly"),
+               BoxSupportVectorMachine(5, "rbf"),
+               BoxSupportVectorMachine(6, "sigmoid"),
+               BoxMLPClassifier(7, 'notTF'),
+               BoxRandomForestClassifier(8, 'Endor'),
+               BoxDecision(9, 'max')]
 
     feature_list, y = Program[0].preprocess(
         feature_data_file=Program[0].path_to_store + '/features_10k.csv')
@@ -597,6 +595,7 @@ def main():
         print("Result:")
         print(Box.classify(music_file, create_file=True, user=user, duration=duration, offset=offset))
         Box.metrics_plot([feature_list, y])
+
 
 if __name__ == '__main__':
     main()
