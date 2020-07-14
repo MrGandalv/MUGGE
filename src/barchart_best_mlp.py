@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-featurelist = "all_feat_combined all_feat_except_chords chroma_stft spectral_centroid zero_crossing_rate mfcc chords".split()
+featurelist = ["All features", "Chroma Frequencies", "Spectral Centroid", "Zero Crossing Rate", "MFCC", "Chords", "All features except chords"]
+# featurelist = "all_feat_combined chroma_stft spectral_centroid zero_crossing_rate mfcc chords all_feat_except_chords".split()
 
 labels = featurelist
 
-data = pd.read_csv("evaluate_best_param.csv")
+data = pd.read_csv("best_param_mlp_10k.csv")
 
 accuracies = data.iloc[:, 3]
 names = data.iloc[:, 0]
