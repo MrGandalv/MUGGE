@@ -62,10 +62,9 @@ class Box:
     path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
     # path_of_data = 'C:/Users/stell/Desktop/MLproject/dataset'
 
-
     # list of all features that are used
     feature_names = ["all", "chroma_stft",
-                     "spectral_centroid", "zero_crossing_rate", "mfcc"]
+                     "spectral_centroid", "zero_crossing_rate", "mfcc", "chords", "all_except_chords"]
     # list of all methods and boxes that are used
     box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression',
                  'SupportVectorMachine']
@@ -154,13 +153,12 @@ class Box:
         feature_data = []
 
         self.scaler = {}
-
         # genre
         feature_data.append(data_genre)
 
         # every data except the last column(genre)
         feature_data.append(all_incl_chords)
-        # print(feature_data[-1])
+
         self.scaler.update({'all': StandardScaler().fit(feature_data[-1])})
         # only the first and second columns (chroma_stft)
         feature_data.append(all_incl_chords[:, [0, 1]])
@@ -175,8 +173,11 @@ class Box:
         feature_data.append(all_incl_chords[:, 6:46])
         self.scaler.update({'mfcc': StandardScaler().fit(feature_data[-1])})
         # only the last 144 columns (chords))
-        feature_data.append(all_incl_chords[:, 47:190])
+        feature_data.append(all_incl_chords[:, 46:190])
         self.scaler.update({'chords': StandardScaler().fit(feature_data[-1])})
+        # only the first 46 columns (all except chords))
+        feature_data.append(all_incl_chords[:, 0:46])
+        self.scaler.update({'all_except_chords': StandardScaler().fit(feature_data[-1])})
 
         self.encoder = LabelEncoder().fit(feature_data[0])
         y = self.encoder.transform(feature_data[0])
@@ -190,40 +191,59 @@ class Box:
 
         return feature_list, y
 
-    def train(self, training_data, repetitions=1):
-        """ Place for the documentation """
-        [feature_list, y] = training_data
-        self.saved_model_files = {}
-        for epoch in tqdm(range(repetitions)):
-            # for X, feature in feature_list:
-            X, feature = feature_list[0]
-            # print(f'Epoch: {epoch+1}, feature: {feature}')
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
-            # append_data_to_file("error.csv", X_test, "w")
-            # append_data_to_file("error.csv", y_test, "a")
-            self.model.fit(X_train, y_train)
-            num_of_music_files = len(X)
-            save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch + 1}_{self.time_stamp}.pkl'
-            self.saved_model_files.update({feature: save_model_name})
-            self.save_to_file(self.model, save_model_name, mode='pickle')
-            # print(self.model.score(X_test, y_test))
-            y_pred = self.model.predict(X_test)
-            # print(precision_score(y_test, y_pred, average='macro'))
-            # print(precision_score(y_test, y_pred, average='micro'))
-            # print(precision_score(y_test, y_pred, average='weighted'))
-        return X_test, y_test
-
-    def train_for_classification(self, training_data, repetitions):
+    def train_for_testing(self, training_data, repetitions=1):
         """ Place for the documentation """
         feature_list, y = training_data
         self.saved_model_files = {}
+        for epoch in tqdm(range(repetitions)):
+            for X, feature in feature_list:
+                # print(f'Epoch: {epoch+1}, feature: {feature}')
+                test_size = 0.2
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,
+                                                                    random_state=42 * epoch + 666)
+                self.model.fit(X_train, y_train)
+                num_of_music_files = len(X)
+                save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_split_{epoch}_{test_size}.pkl'
+                # save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch + 1}_{self.time_stamp}.pkl'
+                self.saved_model_files.update({feature: save_model_name})
+                self.save_to_file(self.model, save_model_name, mode='pickle')
+                # print(self.model.score(X_test, y_test))
+                # y_pred = self.model.predict(X_test)
+                # print(precision_score(y_test, y_pred, average='macro'))
+                # print(precision_score(y_test, y_pred, average='micro'))
+                # print(precision_score(y_test, y_pred, average='weighted'))
+        # return X_test, y_test
+
+    def train_for_classification(self, training_data, features, repetitions=1):
+        """ Place for the documentation """
+        print(f"training of Box {self.box_number} for {features} feature")
+        f_l, y = training_data
+        feature_list = list()
+        if features == 'all' or features == 'everything':
+            feature_list.append(f_l[0])
+        if features == 'chroma_stft' or features == 'everything':
+            feature_list.append(f_l[1])
+        if features == 'spectral_centroid' or features == 'everything':
+            feature_list.append(f_l[2])
+        if features == 'zero_crossing_rate' or features == 'everything':
+            feature_list.append(f_l[3])
+        if features == 'mfcc' or features == 'everything':
+            feature_list.append(f_l[4])
+        if features == 'chords' or features == 'everything':
+            feature_list.append(f_l[5])
+        if features == 'all_except_chords' or features == 'everything':
+            feature_list.append(f_l[6])
+
+        self.saved_model_files = {}
         for X, feature in feature_list:
             # print(f'Epoch: {epoch+1}, feature: {feature}')
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42 + 666)
-            self.model.fit(X_train, y_train)
+            # X_train, X_test, y_train, y_test = train_test_split(
+            #     X, y, test_size=0.2, random_state=42 + 666)
+            self.model.fit(X, y)
+            print(self.model.loss_)
             num_of_music_files = len(X)
-            save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{self.time_stamp}.pkl'
+            save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_complete.pkl'
+            # save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{self.time_stamp}.pkl'
             self.saved_model_files.update({feature: save_model_name})
             self.save_to_file(self.model, save_model_name, mode='pickle')
 
@@ -261,7 +281,6 @@ class Box:
             X, y, test_size=0.2, random_state=42 + 666)
         return self.model.score(X_test, y_test), feature
 
-
     def classify(self, music_file, feature='all', create_file=False, model_file=' ', scaler_file='', encoder_file='',
                  user=False, duration=30, offset=0):
         """ This should take a music file as data to predict its genre
@@ -273,7 +292,7 @@ class Box:
                 somewhere else) because otherwise we will just fill our cwd with useless feature files"""
 
         # extracting the features from the music file
-
+        print("Result:")
         if user:
             y = np.reshape(music_file, -1)
             # y = music_file[0, :]
@@ -286,19 +305,19 @@ class Box:
             y, sr = librosa.load(music_file, mono=True, duration=duration, offset=offset)
 
         feature_list = []
-        if feature == 'chroma_stft' or feature == 'all':
+        if feature == 'chroma_stft' or feature == 'all' or feature == "all_except_chords":
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
             feature_list.append(np.mean(c_s))
             feature_list.append(np.var(c_s))
-        if feature == 'spectral_centroid' or feature == 'all':
+        if feature == 'spectral_centroid' or feature == 'all' or feature == "all_except_chords":
             s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
             feature_list.append(np.mean(s_c))
             feature_list.append(np.var(s_c))
-        if feature == 'zero_crossing_rate' or feature == 'all':
+        if feature == 'zero_crossing_rate' or feature == 'all' or feature == "all_except_chords":
             z_c_r = librosa.feature.zero_crossing_rate(y)
             feature_list.append(np.mean(z_c_r))
             feature_list.append(np.var(z_c_r))
-        if feature == 'mfcc' or feature == 'all':
+        if feature == 'mfcc' or feature == 'all' or feature == "all_except_chords":
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
             for mfeat in mfcc:
                 feature_list.append(np.mean(mfeat))
@@ -332,7 +351,6 @@ class Box:
             if not 'self.encoder' in locals():
                 with open(self.path_to_store + self.save_encoder_name, 'rb') as f:
                     self.encoder = pickle.load(f)
-
         feature_list = self.scaler[feature].transform([feature_list])
         # print(feature_list)
 
@@ -342,25 +360,13 @@ class Box:
                              self.saved_model_files[feature]
             except:
                 model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + reduce(
-                    lambda x, y: x + '_' + y, self.Id.split('_')[2:]) + '/' + feature + '_for_9990_files.pkl'
+                    lambda x, y: x + '_' + y, self.Id.split('_')[2:]) + '/' + feature + '_for_9990_files_complete.pkl'
 
         assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
         with open(model_file, 'rb') as f:
             self.model = pickle.load(f)
 
-        # # predict
-        # prediction = self.model.predict([feature_list])
-        #  scaled_data = scaler.transform([feature_list])
-        #
-        # # save the prediction
-        # if create_file:
-        #     music_name = music_file.split('/')[-1]
-        # prediction_list = [music_name, feature, self.genrelist[prediction[0]], prediction[0]]
-        # save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
-        # self.save_to_file([[prediction_list], ['file name', 'feature', 'decision', 'argmax of prediction']],
-        #                   save_model_name, mode='csv')
         prediction = self.encoder.inverse_transform(self.model.predict(feature_list))
-
         # save the prediction
         if create_file == True and user == False:
             music_name = music_file.split('/')[-1]
@@ -398,6 +404,7 @@ class Box:
         appearance = [y.tolist().count(k) for k in range(0, 10)]
         cf_dummy = []
         for line in cf:
+            # cf_dummy.append([int(pred) for pred, app in zip(line, appearance)])
             cf_dummy.append([pred / app for pred, app in zip(line, appearance)])
         cf = cf_dummy
         fig = plt.figure(figsize=(10, 7))
@@ -426,51 +433,51 @@ class BoxLogisticRegression(Box):
         super().__init__(number)
         self.Id = f'Box_{self.box_number}_{self.name}'
         self.mode = mode
-        self.model = LogisticRegression()
+        self.model = LogisticRegression(random_state=42)
 
 
-class BoxTfNN(Box):
-    """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
-
-    name = 'TfNeuralNetwork'
-
-    def __init__(self, number, arch_box):
-
-        super().__init__(number)
-        self.Id = f'Box_{self.box_number}_{self.name}'
-        # only take the last 5 digits for the unique name
-        self.creation_time_string = f'{time.time()}'[-6:-1]
-        self.model = Sequential()
-        self.model.add(Flatten())
-        for k in arch_box:
-            self.model.add(Dense(k[0], activation=k[1]))
-        self.model.add(Dense(10, activation=tf.nn.softmax))
-        self.model.compile(
-            optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    def train(self, training_data):
-        """ Place for the documentation """
-
-        (x_train, y_train) = training_data
-        self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
-        cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.save_path, save_weights_only=True, verbose=1)
-        self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
-
-    def test(self, training_data, load_path=None):
-        """ Place for the documentation """
-
-        if load_path is None:
-            if 'self.save_path' in locals():
-                load_path = self.save_path
-                self.model.load_weights(load_path)
-        (x_test, y_test) = training_data
-        loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
-        print(f'Accuracy: {100 * acc}%')
-
-    def classify(self, pic):
-        """ Place for the documentation """
-        print(np.argmax(self.model.predict(np.array([pic]))))
-
+# class BoxTfNN(Box):
+#     """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
+#
+#     name = 'TfNeuralNetwork'
+#
+#     def __init__(self, number, arch_box):
+#
+#         super().__init__(number)
+#         self.Id = f'Box_{self.box_number}_{self.name}'
+#         # only take the last 5 digits for the unique name
+#         self.creation_time_string = f'{time.time()}'[-6:-1]
+#         self.model = Sequential()
+#         self.model.add(Flatten())
+#         for k in arch_box:
+#             self.model.add(Dense(k[0], activation=k[1]))
+#         self.model.add(Dense(10, activation=tf.nn.softmax))
+#         self.model.compile(
+#             optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+#
+#     def train_for_testing(self, training_data):
+#         """ Place for the documentation """
+#
+#         (x_train, y_train) = training_data
+#         self.save_path = f'{self.path}/box_{self.box_number}/{self.creation_time_string}.ckpt'
+#         cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.save_path, save_weights_only=True, verbose=1)
+#         self.model.fit(x_train, y_train, epochs=2, callbacks=[cp_callback])
+#
+#     def test(self, training_data, load_path=None):
+#         """ Place for the documentation """
+#
+#         if load_path is None:
+#             if 'self.save_path' in locals():
+#                 load_path = self.save_path
+#                 self.model.load_weights(load_path)
+#         (x_test, y_test) = training_data
+#         loss, acc = self.model.evaluate(x_test, y_test, verbose=2)
+#         print(f'Accuracy: {100 * acc}%')
+#
+#     def classify(self, pic):
+#         """ Place for the documentation """
+#         print(np.argmax(self.model.predict(np.array([pic]))))
+#
 
 class BoxSupportVectorMachine(Box):
 
@@ -482,7 +489,7 @@ class BoxSupportVectorMachine(Box):
         self.name = f'{self.mode}_SupportVectorMachine'
         self.Id = f'Box_{self.box_number}_{self.name}'
         # self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
-        self.model = svm.SVC(kernel=self.mode)
+        self.model = svm.SVC(kernel=self.mode, random_state=42)
 
 
 class BoxMLPClassifier(Box):
@@ -490,12 +497,31 @@ class BoxMLPClassifier(Box):
 
     name = 'MLPClassifier'
 
-    def __init__(self, number, arch):
+    def __init__(self, number, arch="all"):
         """arch is the architecure of the network"""
         super().__init__(number)
         self.Id = f'Box_{self.box_number}_{self.name}'
         self.arch = arch
-        self.model = MLPClassifier(random_state=3)
+
+        if arch == "standard":
+            # the standard MLPClassifier:
+            self.model = MLPClassifier(random_state=42)
+        elif arch == "all" or arch == "spectral_centroid" or arch == "mfcc" or arch == "all_except_chords":
+            # the best MLP classifier for all data (chords incl), spectral_centroid, mfcc and for all features except chords:
+            self.model = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
+                                       learning_rate="adaptive", max_iter=250, random_state=42)
+        elif arch == "chroma_stft":
+            # the best MLP classifier for chroma:
+            self.model = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.01,
+                                       learning_rate="adaptive", max_iter=500, random_state=42)
+        elif arch == "zero_crossing_rate":
+            # the best MLP classifier for zero crossing rate:
+            self.model = MLPClassifier(hidden_layer_sizes=(50, 50, 50), activation="logistic", solver="adam", alpha=0.01,
+                                       learning_rate="adaptive", max_iter=500, random_state=42)
+        elif arch == "chords":
+            # the best MLP classifier for chords:
+            self.model = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="adam", alpha=0.0001,
+                                    learning_rate="adaptive", max_iter=250, random_state=42)
 
 
 class BoxRandomForestClassifier(Box):
@@ -508,7 +534,7 @@ class BoxRandomForestClassifier(Box):
         super().__init__(number)
         self.Id = f'Box_{self.box_number}_{self.name}'
         self.mode = mode
-        self.model = RandomForestClassifier(random_state=3)
+        self.model = RandomForestClassifier(random_state=42)
 
 
 # ____________________________________ Input Box _________________________________________________________
@@ -593,34 +619,43 @@ def save_test_overall_model():
 
 def main():
     """ Place for the documentation """
-    Program = [BoxInput(1),
-               BoxLogisticRegression(2, 'hardcore'),
-               BoxSupportVectorMachine(3, "linear"),
-               BoxSupportVectorMachine(4, "poly"),
-               BoxSupportVectorMachine(5, "rbf"),
-               BoxSupportVectorMachine(6, "sigmoid"),
-               BoxMLPClassifier(7, 'notTF'),
-               BoxRandomForestClassifier(8, 'Endor'),
-               BoxDecision(9, 'max')]
+    # Program = [BoxInput(1),
+    #            BoxLogisticRegression(2, 'hardcore'),
+    #            BoxSupportVectorMachine(3, "linear"),
+    #            BoxSupportVectorMachine(4, "poly"),
+    #            BoxSupportVectorMachine(5, "rbf"),
+    #            BoxSupportVectorMachine(6, "sigmoid"),
+    #            BoxMLPClassifier(7, 'notTF'),
+    #            BoxRandomForestClassifier(8, 'Endor'),
+    #            BoxDecision(9, 'max')]
 
-    feature_list, y = Program[0].preprocess(
-        feature_data_file=Program[0].path_to_store + '/features_10k.csv')
-    # print(feature_list)
-    # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
-    music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/jazz/jazz.00011.wav"
-    # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'
-    user = False
-    user, music_file, duration, offset = Program[0].decide()
 
-    for Box in Program[1:-1]:
+
+    # feature_list, y = Program[0].preprocess(
+    #     feature_data_file=Program[0].path_to_store + '/features_10k.csv')
+    # # print(feature_list)
+    # # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
+    # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/jazz/jazz.00011.wav"
+    # # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'
+    # user = False
+
+    # features = "all_except_chords"
+    # features = "chroma_stft"
+    Classification_program_for_mlp = [BoxInput(1),
+                              BoxMLPClassifier(7, features),
+                              BoxDecision(9, 'max')]
+    feature_list, y = Classification_program_for_mlp[0].preprocess(
+        feature_data_file=Classification_program_for_mlp[0].path_to_store + '/features_10k.csv')
+    user, music_file, duration, offset = Classification_program_for_mlp[0].decide()
+    for Box in Classification_program_for_mlp[1:-1]:
         print(' ')
         # print(f'Training of {Box.Id}')
-        # print(f"training...")
-        # Box.train_for_classification([feature_list, y], repetitions=1)
+        # Box.train_for_classification([feature_list, y], features)
         # print(Box.test([feature_list, y]))
-        print("Result:")
-        print(Box.classify(music_file, create_file=True, user=user, duration=duration, offset=offset))
+        print(Box.classify(music_file, feature= features, create_file=True, user=user, duration=duration, offset=offset))
+        # print("wait for your confusion matrix...")
         # Box.metrics_plot([feature_list, y])
+
 
 if __name__ == '__main__':
     main()

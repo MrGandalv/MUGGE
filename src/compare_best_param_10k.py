@@ -59,10 +59,10 @@ def write_accuracy_to_file(acc_file_name, classifier_name, classifier, scaler, f
 # function, the 'repetitions' parameter comes into play, whichs role is explained above.
 #
 def compute_data(acc_file_name, repetitions):
-    data = pd.read_csv("all_features_whole_songs.csv")
+    data = pd.read_csv("features_10k.csv")
     genre_data = data.iloc[:, -1]  # the last column(genre)
     four_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
-    c_data = pd.read_csv("chords_files/chord_feature.csv")
+    c_data = pd.read_csv("chord_feature_10k_repaired.csv")
     chords_data = c_data.iloc[:, :-1]  # every data except the last column(genre)
     second_matrix = [0] + list(range(145, 289))
     chords_data = chords_data.iloc[:, second_matrix]
@@ -77,8 +77,6 @@ def compute_data(acc_file_name, repetitions):
     data_classifier_list = list()
     data_classifier_list.append([X_all, "all_stds", sscaler])
     data_classifier_list.append([X_all, "all_mms", mmscaler])
-    # data_classifier_list.append([X_all[:, 0:46], "all_except_chords_stds", sscaler])
-    # data_classifier_list.append([X_all[:, 0:46], "all_except_chords_mms", mmscaler])
     data_classifier_list.append([X_all[:, [0, 1]], "chro_stds", sscaler])
     data_classifier_list.append([X_all[:, [0, 1]], "chro_mms", mmscaler])
     data_classifier_list.append([X_all[:, [2, 3]], "spec_stds", sscaler])
@@ -87,80 +85,98 @@ def compute_data(acc_file_name, repetitions):
     data_classifier_list.append([X_all[:, [4, 5]], "zero_mms", mmscaler])
     data_classifier_list.append([X_all[:, 6:46], "mfcc_stds", sscaler])
     data_classifier_list.append([X_all[:, 6:46], "mfcc_mms", mmscaler])
-    data_classifier_list.append([X_all[:, 47:190], "chords_stds", sscaler])
-    data_classifier_list.append([X_all[:, 47:190], "chords_mms", mmscaler])
+    data_classifier_list.append([X_all[:, 46:190], "chords_stds", sscaler])
+    data_classifier_list.append([X_all[:, 46:190], "chords_mms", mmscaler])
+    data_classifier_list.append([X_all[:, 0:46], "all_except_chords_stds", sscaler])
+    data_classifier_list.append([X_all[:, 0:46], "all_except_chords_mms", mmscaler])
 
     # best mlp classifier for all:
-    mlp_all_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="adam", alpha=0.0001,
+    mlp_all_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
                                  learning_rate="adaptive", max_iter=250, random_state=3)
     data_classifier_list[0].append(mlp_all_stds)
     data_classifier_list[0].append("MLP_for_all_stds")
-    mlp_all_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
-                                learning_rate="adaptive", max_iter=750, random_state=3)
+    mlp_all_mms = MLPClassifier(hidden_layer_sizes=(100,), activation="logistic", solver="lbfgs", alpha=0.01,
+                                learning_rate="adaptive", max_iter=500, random_state=3)
     data_classifier_list[1].append(mlp_all_mms)
     data_classifier_list[1].append("MLP_for_all_mms")
 
     # best mlp classifier for chro:
     mlp_chro_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.01,
-                                  learning_rate="adaptive", max_iter=750, random_state=3)
+                                  learning_rate="adaptive", max_iter=500, random_state=3)
     data_classifier_list[2].append(mlp_chro_stds)
     data_classifier_list[2].append("MLP_for_chro_stds")
-    mlp_chro_mms = MLPClassifier(hidden_layer_sizes=(50, 50, 50), activation="relu", solver="lbfgs", alpha=0.01,
-                                 learning_rate="adaptive", max_iter=250, random_state=3)
+    mlp_chro_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="lbfgs", alpha=0.0001,
+                                 learning_rate="adaptive", max_iter=500, random_state=3)
     data_classifier_list[3].append(mlp_chro_mms)
     data_classifier_list[3].append("MLP_for_chro_mms")
+
     # best mlp classifier for spec:
     mlp_spec_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
                                   learning_rate="adaptive", max_iter=250, random_state=3)
     data_classifier_list[4].append(mlp_spec_stds)
     data_classifier_list[4].append("MLP_for_spec_stds")
-    mlp_spec_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="lbfgs", alpha=0.0001,
-                                 learning_rate="adaptive", max_iter=750, random_state=3)
+    mlp_spec_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.01,
+                                 learning_rate="adaptive", max_iter=250, random_state=3)
     data_classifier_list[5].append(mlp_spec_mms)
     data_classifier_list[5].append("MLP_for_spec_mms")
+
     # best mlp classifier for zero:
     mlp_zero_stds = MLPClassifier(hidden_layer_sizes=(50, 50, 50), activation="logistic", solver="adam", alpha=0.01,
-                                  learning_rate="adaptive", max_iter=750, random_state=3)
+                                  learning_rate="adaptive", max_iter=500, random_state=3)
     data_classifier_list[6].append(mlp_zero_stds)
     data_classifier_list[6].append("MLP_for_zero_stds")
-    mlp_zero_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.01,
-                                 learning_rate="adaptive", max_iter=750, random_state=3)
+    mlp_zero_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
+                                 learning_rate="adaptive", max_iter=250, random_state=3)
     data_classifier_list[7].append(mlp_zero_mms)
     data_classifier_list[7].append("MLP_for_zero_mms")
+
     # best mlp classifier for mfcc:
     mlp_mfcc_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
                                   learning_rate="adaptive", max_iter=250, random_state=3)
     data_classifier_list[8].append(mlp_mfcc_stds)
     data_classifier_list[8].append("MLP_for_mfcc_stds")
     mlp_mfcc_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="lbfgs", alpha=0.01,
-                                 learning_rate="adaptive", max_iter=750, random_state=3)
+                                 learning_rate="adaptive", max_iter=500, random_state=3)
     data_classifier_list[9].append(mlp_mfcc_mms)
     data_classifier_list[9].append("MLP_for_mfcc_mms")
+
     # best mlp classifier for chords:
     mlp_chords_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="adam", alpha=0.0001,
                                     learning_rate="adaptive", max_iter=250, random_state=3)
     data_classifier_list[10].append(mlp_chords_stds)
     data_classifier_list[10].append("MLP_for_chords_stds")
-    mlp_chords_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.01,
-                                   learning_rate="adaptive", max_iter=750, random_state=3)
+    mlp_chords_mms = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
+                                   learning_rate="adaptive", max_iter=500, random_state=3)
     data_classifier_list[11].append(mlp_chords_mms)
     data_classifier_list[11].append("MLP_for_chords_mms")
 
+    # best mlp classifier for all except chords:
+    mlp_all_e_c_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
+                                     learning_rate="adaptive", max_iter=250, random_state=3)
+    data_classifier_list[12].append(mlp_all_e_c_stds)
+    data_classifier_list[12].append("MLP_for_all_except_chords_stds")
+    mlp_all_e_c_mms = MLPClassifier(hidden_layer_sizes=(100,), activation="logistic", solver="lbfgs", alpha=0.01,
+                                    learning_rate="adaptive", max_iter=500, random_state=3)
+    data_classifier_list[13].append(mlp_all_e_c_mms)
+    data_classifier_list[13].append("MLP_for_all_except_chords_mms")
+    #
     for X, feat_name, scaler, classifier, classifier_name in data_classifier_list:
         write_accuracy_to_file(acc_file_name, classifier_name, classifier, scaler, feat_name, X, y, repetitions)
+    # for X, feat_name, scaler, classifier, classifier_name in [data_classifier_list[0]]:
+    #     write_accuracy_to_file(acc_file_name, classifier_name, classifier, scaler, feat_name, X, y, repetitions)
+
 
 if __name__ == '__main__':
     # Now use the above function to create a file named 'accuracy_overview.csv', with the desired accuracies in it.
     # Here 25 repetitions (different train_test_splits) are used.
     # file_name = "complete_data_4_features.csv"
-    acc_file_name = "evaluate_best_param.csv"
+    acc_file_name = "best_param_mlp_10k.csv"
     # features_file_name = "all_features_whole_songs.csv"
 
-    write_headline(acc_file_name)
-    compute_data(acc_file_name, 2)
+    # write_headline(acc_file_name)
+    # compute_data(acc_file_name, 5)
 
     # Could take some minutes.
-
 
     #  Prints out how long the program was running, in seconds.
     endtime = time.time()

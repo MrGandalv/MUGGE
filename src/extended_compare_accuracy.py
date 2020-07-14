@@ -82,6 +82,8 @@ def compute_data(acc_file_name, features_file_name, repetitions):
                     [X_zero, "zero_crossing_rate"], [X_mfcc, "mfcc"]]
     lr = LogisticRegression()
     mlp = MLPClassifier(random_state=3)
+    mlp_all_stds = MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.0001,
+                                 learning_rate="adaptive", max_iter=250, random_state=3)
     rf = RandomForestClassifier(random_state=3)
     svml = svm.SVC(kernel="linear")
     svmp = svm.SVC(kernel="poly")

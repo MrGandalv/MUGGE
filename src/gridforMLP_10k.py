@@ -38,7 +38,10 @@ def find_best_param(file_name, cv, X, y):
     # parameter_space = {"hidden_layer_sizes": [(100, 50), (100,)],"activation": ["logistic", "relu"],
     #                    "solver": ["lbfgs", "adam"],
     #                    "max_iter": [250, 500], "learning_rate": ["adaptive", "constant"],"alpha": [0.0001, 0.01]}
-    parameter_space = {"solver": ["adam"], "alpha": [0.01, 0.0001]}
+    parameter_space = {"hidden_layer_sizes": [(100, 50), (100,)], "activation": ["logistic", "relu"],
+                       "solver": ["lbfgs", "adam"],
+                       "max_iter": [250, 500], "learning_rate": ["adaptive", "constant"], "alpha": [0.0001, 0.01]}
+    # parameter_space = {"solver": ["adam"], "alpha": [0.01, 0.0001]}
     mlp = MLPClassifier(random_state=42)
     clf = GridSearchCV(mlp, parameter_space, cv=cv, error_score=0)
     clf.fit(X, y)
@@ -52,10 +55,10 @@ def find_best_param(file_name, cv, X, y):
 
 
 def find_the_best():
-    data = pd.read_csv("all_features_whole_songs.csv")
+    data = pd.read_csv("features_10k.csv")
     genre_data = data.iloc[:, -1]  # the last column(genre)
     four_features_data = data.iloc[:, :-1]  # every data except the last column(genre)
-    c_data = pd.read_csv("chord_feature_10k_repaired.csv)
+    c_data = pd.read_csv("chord_feature_10k_repaired.csv")
     chords_data = c_data.iloc[:, :-1]  # every data except the last column(genre)
     second_matrix = [0] + list(range(145, 289))
     chords_data = chords_data.iloc[:, second_matrix]
@@ -71,21 +74,22 @@ def find_the_best():
     data_list = list()
     data_list.append([X_all_stds, "all_stds"])
     data_list.append([X_all_mms, "all_mms"])
-    data_list.append([X_all_stds[:, [0, 1]], "chro_stds"])
+    # data_list.append([X_all_stds[:, [0, 1]], "chro_stds"])
     data_list.append([X_all_mms[:, [0, 1]], "chro_mms"])
-    data_list.append([X_all_stds[:, [2, 3]], "spec_stds"])
+    # data_list.append([X_all_stds[:, [2, 3]], "spec_stds"])
     data_list.append([X_all_mms[:, [2, 3]], "spec_mms"])
-    data_list.append([X_all_stds[:, [4, 5]], "zero_stds"])
+    # data_list.append([X_all_stds[:, [4, 5]], "zero_stds"])
     data_list.append([X_all_mms[:, [4, 5]], "zero_mms"])
-    data_list.append([X_all_stds[:, 6:46], "mfcc_stds"])
+    # data_list.append([X_all_stds[:, 6:46], "mfcc_stds"])
     data_list.append([X_all_mms[:, 6:46], "mfcc_mms"])
-    data_list.append([X_all_stds[:, 47:190], "chords_stds"])
+    # data_list.append([X_all_stds[:, 47:190], "chords_stds"])
     data_list.append([X_all_mms[:, 47:190], "chords_mms"])
-    data_list.append([X_all_stds[:, 0:46], "all_except_chords_stds"])
+    # data_list.append([X_all_stds[:, 0:46], "all_except_chords_stds"])
     data_list.append([X_all_mms[:, 0:46], "all_except_chords_mms"])
     cv = KFold(n_splits=5, shuffle=True)  # cross-validation generator for model selection
     for X, name in data_list:
-        find_best_param(f"parameter_search_mlp_{name}.csv", cv, X, y)
+        find_best_param(f"parameter_search_mlp_{name}_10k.csv", cv, X, y)
+
 
 if __name__ == '__main__':
     find_the_best()
