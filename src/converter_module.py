@@ -8,7 +8,7 @@ def wav_to_array_file(input_file, duration=30, offset=0, normalized=False):
     a = pydub.AudioSegment.from_wav(
         input_file)  # get array from AudioSegment object
     # slice = a[40000:70000]  # only take 30 sec. excerpt
-    slice = a[1000 * offset:1000 * (offset + duration)]  # only take 30 sec. excerpt
+    slice = a[1000 * offset:1000 * (offset + duration)]
     y = np.array(slice.get_array_of_samples())  # cast as NumPy array
 
     if a.channels == 2:
@@ -30,7 +30,7 @@ def wav_to_array_rec(input_file):
 
 def mp3_to_array(input_file, duration=30, offset=0, normalized=False):
     """Convert an at least 70 seconds long MP3-file to a numpy array"""
-    a = pydub.AudioSegment.from_mp3(f)
+    a = pydub.AudioSegment.from_mp3(input_file)
     slice = a[1000 * offset:1000 * (offset + duration)]  # get a slice from 40 to 70 seconds of an mp3
     y = np.array(slice.get_array_of_samples())
     y_new = []
@@ -54,7 +54,7 @@ def wav_to_mp3(input_file):
     """ Converts WAV to mp3, renames 'filname.wav' as 'filename.mp3' """
     sound = AudioSegment.from_file(input_file, format='wav')
     sound.export(name_mp3(input_file), format='mp3')
-
+    return name_mp3(input_file)
 
 def name_wav(input_file):
     new_name = input_file[:-3] + "wav"  # change extension to 'wav'

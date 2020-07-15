@@ -39,9 +39,10 @@ from sklearn.metrics import precision_score
 
 # other scripts
 
-
+from svm_helper import helper
 from extended_feature_extraction import write_feature_file
 from record_music import prepro, record
+from converter_module import wav_to_mp3, mp3_to_wav
 
 
 # from compare_accuracy import write_accuracy_to_file, write_headline
@@ -240,7 +241,7 @@ class Box:
             # X_train, X_test, y_train, y_test = train_test_split(
             #     X, y, test_size=0.2, random_state=42 + 666)
             self.model.fit(X, y)
-            print(self.model.loss_)
+            # print(self.model.loss_)
             num_of_music_files = len(X)
             save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_complete.pkl'
             # save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{self.time_stamp}.pkl'
@@ -290,9 +291,8 @@ class Box:
 
                 stores the feature file in the current working directory and deletes it in the end (except the user stored it before
                 somewhere else) because otherwise we will just fill our cwd with useless feature files"""
-
+        print(f"Result of Box {self.Id} for {feature} feature")
         # extracting the features from the music file
-        print("Result:")
         if user:
             y = np.reshape(music_file, -1)
             # y = music_file[0, :]
@@ -387,7 +387,7 @@ class Box:
             try:
                 load.model_file = self.path_to_store + self.saved_model_files[feature]
             except:
-                load_model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_9990_files.pkl'
+                load_model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_9990_files_complete.pkl'
         else:
             feature = load_model_file.split('/')[-1].split('_')[0]
         assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
@@ -397,11 +397,11 @@ class Box:
         X = feature_list[feature]
         with open(load_model_file, 'rb') as f:
             self.model = pickle.load(f)
-        # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
-
-        y_pred = self.model.predict(X)
-        cf = confusion_matrix(y, y_pred)
-        appearance = [y.tolist().count(k) for k in range(0, 10)]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+        print(self.model.score(X_test, y_test))
+        y_pred = self.model.predict(X_test)
+        cf = confusion_matrix(y_test, y_pred)
+        appearance = [y_test.tolist().count(k) for k in range(0, 10)]
         cf_dummy = []
         for line in cf:
             # cf_dummy.append([int(pred) for pred, app in zip(line, appearance)])
@@ -480,16 +480,43 @@ class BoxLogisticRegression(Box):
 #
 
 class BoxSupportVectorMachine(Box):
+    name = 'SupportVectorMachine'
 
-    def __init__(self, number, mode):
-        """mode is a string"""
+    def __init__(self, number, arch="all"):
+        """arch is a string"""
         super().__init__(number)
-        self.mode = mode  # linear, poly, rbf, sigmoid
-
-        self.name = f'{self.mode}_SupportVectorMachine'
         self.Id = f'Box_{self.box_number}_{self.name}'
+        self.arch = arch  #
+
+        # self.name = f'{self.mode}_SupportVectorMachine'
         # self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
-        self.model = svm.SVC(kernel=self.mode, random_state=42)
+        # self.model = svm.SVC(kernel=self.mode, random_state=42)
+
+        kernel_data, C_data, gamma_data = helper(need_new=False)
+        if arch == "standard":
+            # the standard MLPClassifier:
+            self.model = svm.SVC(random_state=42)
+        elif arch == "all":
+            # the best MLP classifier for all data (chords incl):
+            self.model = svm.SVC(kernel=kernel_data[0], C=C_data[0], gamma=gamma_data[0], random_state=42)
+        elif arch == "chroma_stft":
+            # the best MLP classifier for chroma:
+            self.model = svm.SVC(kernel=kernel_data[1], C=C_data[1], gamma=gamma_data[1], random_state=42)
+        elif arch == "spectral_centroid":
+            # the best MLP classifier for spec:
+            self.model = svm.SVC(kernel=kernel_data[2], C=C_data[2], gamma=gamma_data[2], random_state=42)
+        elif arch == "zero_crossing_rate":
+            # the best MLP classifier for zero crossing rate:
+            self.model = svm.SVC(kernel=kernel_data[3], C=C_data[3], gamma=gamma_data[3], random_state=42)
+        elif arch == "mfcc":
+            # the best MLP classifier for mfcc:
+            self.model = svm.SVC(kernel=kernel_data[4], C=C_data[4], gamma=gamma_data[4], random_state=42)
+        elif arch == "chords":
+            # the best MLP classifier for chords:
+            self.model = svm.SVC(kernel=kernel_data[5], C=C_data[5], gamma=gamma_data[5], random_state=42)
+        elif arch == "all_except_chords":
+            # the best MLP classifier for all features except chords:
+            self.model = svm.SVC(kernel=kernel_data[6], C=C_data[6], gamma=gamma_data[6], random_state=42)
 
 
 class BoxMLPClassifier(Box):
@@ -516,12 +543,13 @@ class BoxMLPClassifier(Box):
                                        learning_rate="adaptive", max_iter=500, random_state=42)
         elif arch == "zero_crossing_rate":
             # the best MLP classifier for zero crossing rate:
-            self.model = MLPClassifier(hidden_layer_sizes=(50, 50, 50), activation="logistic", solver="adam", alpha=0.01,
+            self.model = MLPClassifier(hidden_layer_sizes=(50, 50, 50), activation="logistic", solver="adam",
+                                       alpha=0.01,
                                        learning_rate="adaptive", max_iter=500, random_state=42)
         elif arch == "chords":
             # the best MLP classifier for chords:
             self.model = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="adam", alpha=0.0001,
-                                    learning_rate="adaptive", max_iter=250, random_state=42)
+                                       learning_rate="adaptive", max_iter=250, random_state=42)
 
 
 class BoxRandomForestClassifier(Box):
@@ -629,32 +657,44 @@ def main():
     #            BoxRandomForestClassifier(8, 'Endor'),
     #            BoxDecision(9, 'max')]
 
-
-
     # feature_list, y = Program[0].preprocess(
     #     feature_data_file=Program[0].path_to_store + '/features_10k.csv')
     # # print(feature_list)
     # # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
-    # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/jazz/jazz.00011.wav"
+    music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/country/country.00045.wav"
+    music_file = "C:/Users/JD/Desktop/sdkarte/Cardd/Music/The Weeknd - Often (Kygo Remix).mp3"
     # # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'
     # user = False
-
-    # features = "all_except_chords"
+    feature_names = ["all", "chroma_stft",
+                     "spectral_centroid", "zero_crossing_rate", "mfcc", "chords", "all_except_chords"]
     # features = "chroma_stft"
-    Classification_program_for_mlp = [BoxInput(1),
-                              BoxMLPClassifier(7, features),
-                              BoxDecision(9, 'max')]
-    feature_list, y = Classification_program_for_mlp[0].preprocess(
-        feature_data_file=Classification_program_for_mlp[0].path_to_store + '/features_10k.csv')
-    user, music_file, duration, offset = Classification_program_for_mlp[0].decide()
-    for Box in Classification_program_for_mlp[1:-1]:
-        print(' ')
-        # print(f'Training of {Box.Id}')
-        # Box.train_for_classification([feature_list, y], features)
-        # print(Box.test([feature_list, y]))
-        print(Box.classify(music_file, feature= features, create_file=True, user=user, duration=duration, offset=offset))
-        # print("wait for your confusion matrix...")
-        # Box.metrics_plot([feature_list, y])
+    # feature_list, y = Classification_program_for_mlp[0].preprocess(
+    #     feature_data_file=Classification_program_for_mlp[0].path_to_store + '/features_10k.csv')
+    # user, music_file, duration, offset = Classification_program_for_mlp[0].decide()
+    user = False
+    duration = 3
+    offset = 90
+
+    for features in feature_names:
+        # features = "chroma_stft"
+        Classification_program_for_mlp = [BoxInput(1),
+                                          BoxLogisticRegression(2, 'hardcore'),
+                                          BoxSupportVectorMachine(3, features),
+                                          BoxMLPClassifier(7, features),
+                                          BoxRandomForestClassifier(8, 'Endor'),
+                                          BoxDecision(9, 'max')]
+        for Box in Classification_program_for_mlp[1:-1]:
+            print(' ')
+            # print(f"Result for :")
+
+            # print(f'Training of {Box.Id}')
+            # Box.train_for_classification([feature_list, y], features)
+            # print(Box.test([feature_list, y]))
+            print(
+                Box.classify(music_file, feature=features, create_file=False, user=user, duration=duration,
+                             offset=offset))
+            # print("wait for your confusion matrix...")
+            # Box.metrics_plot([feature_list, y])
 
 
 if __name__ == '__main__':
