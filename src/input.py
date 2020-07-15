@@ -5,9 +5,14 @@ from scipy.io.wavfile import write
 # use the converter module
 import converter as conv
 
+<<<<<<< Updated upstream:src/input.py
 
 def prepro(input):
     format_type = input[-4:]  # find formatextension
+=======
+def prepro(input_file):
+    format_type = input_file[-4:]  # find formatextension
+>>>>>>> Stashed changes:src/record_music.py
     # dictionary instead of if-else to avoid restructuring in case of additional formats
     format = {
         ".wav": conv.wav_to_array_file,
