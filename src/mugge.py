@@ -54,24 +54,21 @@ from converter_module import wav_to_mp3, mp3_to_wav
 
 class Box:
     """This class is the parent of all box-method-objects."""
-
-    # path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
-    path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
+    path_to_store = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src'
     # path_to_store = 'C:/Users/stell/Desktop/MLproject/MUGGE/src'
+    # path_to_store = 'C:/Users/JD/Desktop/MLP/MUGGE/src'
+
     # if not necessary here then move to input box
-    # path_of_data = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres'
-    path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
+    path_of_data = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data'
     # path_of_data = 'C:/Users/stell/Desktop/MLproject/dataset'
+    # path_of_data = 'C:/Users/JD/PycharmProjects/newstart/data_music'
 
     # list of all features that are used
-    feature_names = ["all", "chroma_stft",
-                     "spectral_centroid", "zero_crossing_rate", "mfcc", "chords", "all_except_chords"]
+    feature_names = ["all", "chroma_stft","spectral_centroid", "zero_crossing_rate", "mfcc", "chords", "all_except_chords"]
     # list of all methods and boxes that are used
-    box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression',
-                 'SupportVectorMachine']
+    box_names = ['Decision', 'Input', 'RandomForestClassifier', 'TfNeuralNetwork', 'LogisticRegression','SupportVectorMachine']
     # list of all genres
-    genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(
-        ' ')
+    genrelist = "rock pop disco blues classical country hiphop jazz metal reggae".split(' ')
 
     save_encoder_name = '/Backups/encoder.pkl'
     save_scaler_name = '/Backups/scaler.pkl'
@@ -192,28 +189,20 @@ class Box:
 
         return feature_list, y
 
-    def train_for_testing(self, training_data, repetitions=1):
+    def train(self, training_data, repetitions=1):
         """ Place for the documentation """
         feature_list, y = training_data
         self.saved_model_files = {}
         for epoch in tqdm(range(repetitions)):
             for X, feature in feature_list:
-                # print(f'Epoch: {epoch+1}, feature: {feature}')
                 test_size = 0.2
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,
-                                                                    random_state=42 * epoch + 666)
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42 * epoch + 666)
                 self.model.fit(X_train, y_train)
                 num_of_music_files = len(X)
                 save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_split_{epoch}_{test_size}.pkl'
                 # save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{epoch + 1}_{self.time_stamp}.pkl'
                 self.saved_model_files.update({feature: save_model_name})
                 self.save_to_file(self.model, save_model_name, mode='pickle')
-                # print(self.model.score(X_test, y_test))
-                # y_pred = self.model.predict(X_test)
-                # print(precision_score(y_test, y_pred, average='macro'))
-                # print(precision_score(y_test, y_pred, average='micro'))
-                # print(precision_score(y_test, y_pred, average='weighted'))
-        # return X_test, y_test
 
     def train_for_classification(self, training_data, features, repetitions=1):
         """ Place for the documentation """
@@ -237,9 +226,6 @@ class Box:
 
         self.saved_model_files = {}
         for X, feature in feature_list:
-            # print(f'Epoch: {epoch+1}, feature: {feature}')
-            # X_train, X_test, y_train, y_test = train_test_split(
-            #     X, y, test_size=0.2, random_state=42 + 666)
             self.model.fit(X, y)
             # print(self.model.loss_)
             num_of_music_files = len(X)
@@ -247,8 +233,6 @@ class Box:
             # save_model_name = f'/model_{self.Id}/{feature}_for_{num_of_music_files}_files_{self.time_stamp}.pkl'
             self.saved_model_files.update({feature: save_model_name})
             self.save_to_file(self.model, save_model_name, mode='pickle')
-
-    # print(self.saved_model_files)
 
     def test(self, test_data, feature='all', load_model_file=''):
 
@@ -260,11 +244,9 @@ class Box:
 
         if not os.path.isfile(load_model_file):
             try:
-                load_model_file = self.path_to_store + \
-                                  self.saved_model_files[feature]
+                load_model_file = self.path_to_store + self.saved_model_files[feature]
             except:
-                load_model_file = self.path_to_store + '/' + 'Backups' + '/' + \
-                                  'model_Backup_' + self.name + '/' + feature + '_for_999_files_10.pkl'
+                load_model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_9990_files_complete.pkl'
         else:
             # the feature of the loaded model
             feature = load_model_file.split('/')[-1].split('_')[0]
@@ -278,50 +260,40 @@ class Box:
 
         with open(load_model_file, 'rb') as f:
             self.model = pickle.load(f)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42 + 666)
-        return self.model.score(X_test, y_test), feature
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
+        return self.name, self.model.score(X_test, y_test), feature
 
-    def classify(self, music_file, feature='all', create_file=False, model_file=' ', scaler_file='', encoder_file='',
-                 user=False, duration=30, offset=0):
-        """ This should take a music file as data to predict its genre
-                need to give him the feature you want it to predict from
-                model_file is a list of all the models that should be tested
-                by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
-
-                stores the feature file in the current working directory and deletes it in the end (except the user stored it before
-                somewhere else) because otherwise we will just fill our cwd with useless feature files"""
-        print(f"Result of Box {self.Id} for {feature} feature")
-        # extracting the features from the music file
+    def preprocess_for_calssify(self, music_file, feature='all', scaler_file='', encoder_file='', user=False, duration=30, offset=0):
+        """extracting the features from the music file which will just be one row and will
+         have the form of feature_data as in preprcess""" 
+        if not os.path.isfile(scaler_file):
+            if not 'self.scaler' in locals():
+                with open(self.path_to_store + self.save_scaler_name, 'rb') as f:
+                    self.scaler = pickle.load(f)
         if user:
             y = np.reshape(music_file, -1)
-            # y = music_file[0, :]
-            # print(music_file)
-            # print(music_file[20])
-            # print(music_file.shape)
-            # print(y.shape)
             sr = 22050
         else:
             y, sr = librosa.load(music_file, mono=True, duration=duration, offset=offset)
 
-        feature_list = []
+        feature_data = []
         if feature == 'chroma_stft' or feature == 'all' or feature == "all_except_chords":
             c_s = librosa.feature.chroma_stft(y=y, sr=sr)
-            feature_list.append(np.mean(c_s))
-            feature_list.append(np.var(c_s))
+            feature_data.append(np.mean(c_s))
+            feature_data.append(np.var(c_s))
         if feature == 'spectral_centroid' or feature == 'all' or feature == "all_except_chords":
             s_c = librosa.feature.spectral_centroid(y=y, sr=sr)
-            feature_list.append(np.mean(s_c))
-            feature_list.append(np.var(s_c))
+            feature_data.append(np.mean(s_c))
+            feature_data.append(np.var(s_c))
         if feature == 'zero_crossing_rate' or feature == 'all' or feature == "all_except_chords":
             z_c_r = librosa.feature.zero_crossing_rate(y)
-            feature_list.append(np.mean(z_c_r))
-            feature_list.append(np.var(z_c_r))
+            feature_data.append(np.mean(z_c_r))
+            feature_data.append(np.var(z_c_r))
         if feature == 'mfcc' or feature == 'all' or feature == "all_except_chords":
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
             for mfeat in mfcc:
-                feature_list.append(np.mean(mfeat))
-                feature_list.append(np.var(mfeat))
+                feature_data.append(np.mean(mfeat))
+                feature_data.append(np.var(mfeat))
         if feature == 'chords' or feature == 'all':
             # Code for the Transition Matrix_all
             chromagram = librosa.feature.chroma_stft(y=y, sr=sr)
@@ -337,46 +309,56 @@ class Box:
                     transition_matrix[k, :] = transition_matrix[k, :] / np.sum(transition_matrix[k, :])
             for n in range(12):
                 for m in range(12):
-                    feature_list.append(round(transition_matrix[n][m], 6))
+                    feature_data.append(round(transition_matrix[n][m], 6))
 
-            # now load the model for the given feature
-        # print(feature_list)
+        feature_data = self.scaler[feature].transform([feature_data])
+        return feature_data
 
-        if not os.path.isfile(scaler_file):
-            if not 'self.scaler' in locals():
-                with open(self.path_to_store + self.save_scaler_name, 'rb') as f:
-                    self.scaler = pickle.load(f)
+    def classify(self, music_file, feature='all', create_file=False, model_file=' ', scaler_file='', encoder_file='',user=False, duration=30, offset=0):
+        """ This should take a music file as data to predict its genre
+                need to give him the feature you want it to predict from
+                model_file is a list of all the models that should be tested
+                by default it contains the name of the feature the model is currently trained for, which of course not a file-name-string
+
+                stores the feature file in the current working directory and deletes it in the end (except the user stored it before
+                somewhere else) because otherwise we will just fill our cwd with useless feature files"""
+
+        #for MLP and SVM
+        if 'self.arch' in locals():
+            feature = self.arch
+
+        print(f"Result of Box {self.Id} for {feature} feature")
+        # extracting the features from the music file
+        feature_data = self.preprocess_for_calssify(music_file, feature, scaler_file, encoder_file, user, duration, offset)
 
         if not os.path.isfile(encoder_file):
             if not 'self.encoder' in locals():
                 with open(self.path_to_store + self.save_encoder_name, 'rb') as f:
                     self.encoder = pickle.load(f)
-        feature_list = self.scaler[feature].transform([feature_list])
-        # print(feature_list)
 
+        # now load the model for the given feature
         if not os.path.isfile(model_file):
             try:
-                model_file = self.path_to_store + \
-                             self.saved_model_files[feature]
+                model_file = self.path_to_store + self.saved_model_files[feature]
             except:
-                model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + reduce(
-                    lambda x, y: x + '_' + y, self.Id.split('_')[2:]) + '/' + feature + '_for_9990_files_complete.pkl'
+                model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + reduce(lambda x, y: x + '_' + y, self.Id.split('_')[2:]) + '/' + feature + '_for_9990_files_complete.pkl'
 
         assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
         with open(model_file, 'rb') as f:
             self.model = pickle.load(f)
 
-        prediction = self.encoder.inverse_transform(self.model.predict(feature_list))
+        prediction = self.encoder.inverse_transform(self.model.predict(feature_data))
+
         # save the prediction
         if create_file == True and user == False:
             music_name = music_file.split('/')[-1]
             prediction_list = [music_name, feature, prediction[0]]
             save_model_name = f'/prediction_{self.Id}/{music_name}_{feature}_{self.time_stamp}.csv'
-            self.save_to_file([[prediction_list], ['file name', 'feature', 'genre']],
-                              save_model_name, mode='csv')
+            self.save_to_file([[prediction_list], ['file name', 'feature', 'genre']], save_model_name, mode='csv')
+
         return prediction[0]
 
-    def metrics_plot(self, test_data, feature='all', load_model_file='', encoder_file=''):
+    def metrics_plot(self,test_data, feature='all',load_model_file='', encoder_file=''):
         """Creates plots of useful metrics"""
         if not os.path.isfile(encoder_file):
             if not 'self.encoder' in locals():
@@ -393,10 +375,12 @@ class Box:
         assert load_model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
 
         feature_list, y = test_data
-        feature_list = {i: k for (k, i) in feature_list}
-        X = feature_list[feature]
-        with open(load_model_file, 'rb') as f:
-            self.model = pickle.load(f)
+
+        feature_list={i: k for (k,i) in feature_list}
+        X=feature_list[feature]
+        with open(load_model_file,'rb') as f:
+            self.model=pickle.load(f)
+
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42 + 666)
         print(self.model.score(X_test, y_test))
         y_pred = self.model.predict(X_test)
@@ -428,13 +412,11 @@ class BoxLogisticRegression(Box):
 
     name = 'LogisticRegression'
 
-    def __init__(self, number, mode):
+    def __init__(self, number):
         """mode must be a string"""
         super().__init__(number)
         self.Id = f'Box_{self.box_number}_{self.name}'
-        self.mode = mode
-        self.model = LogisticRegression(random_state=42)
-
+        self.model = LogisticRegression()
 
 # class BoxTfNN(Box):
 #     """if one needs a more sophisticated NN, this might be useful, otherwise use the MLPClassifier"""
@@ -455,7 +437,7 @@ class BoxLogisticRegression(Box):
 #         self.model.compile(
 #             optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 #
-#     def train_for_testing(self, training_data):
+#     def train(self, training_data):
 #         """ Place for the documentation """
 #
 #         (x_train, y_train) = training_data
@@ -480,14 +462,13 @@ class BoxLogisticRegression(Box):
 #
 
 class BoxSupportVectorMachine(Box):
-    name = 'SupportVectorMachine'
 
     def __init__(self, number, arch="all"):
         """arch is a string"""
         super().__init__(number)
-        self.Id = f'Box_{self.box_number}_{self.name}'
         self.arch = arch  #
-
+        self.name = f'{self.arch}_SupportVectorMachine'
+        self.Id = f'Box_{self.box_number}_{self.name}'
         # self.name = f'{self.mode}_SupportVectorMachine'
         # self.Id = f'Box_{self.box_number}_{self.mode}_{self.name}'
         # self.model = svm.SVC(kernel=self.mode, random_state=42)
@@ -523,7 +504,6 @@ class BoxMLPClassifier(Box):
     """the easy NN Box"""
 
     name = 'MLPClassifier'
-
     def __init__(self, number, arch="all"):
         """arch is the architecure of the network"""
         super().__init__(number)
@@ -550,19 +530,6 @@ class BoxMLPClassifier(Box):
             # the best MLP classifier for chords:
             self.model = MLPClassifier(hidden_layer_sizes=(100, 50), activation="logistic", solver="adam", alpha=0.0001,
                                        learning_rate="adaptive", max_iter=250, random_state=42)
-
-
-class BoxRandomForestClassifier(Box):
-    """ Place for the documentation """
-
-    name = 'RandomForestClassifier'
-
-    def __init__(self, number, mode):
-        """ mode must be a string """
-        super().__init__(number)
-        self.Id = f'Box_{self.box_number}_{self.name}'
-        self.mode = mode
-        self.model = RandomForestClassifier(random_state=42)
 
 
 # ____________________________________ Input Box _________________________________________________________
@@ -615,30 +582,188 @@ class BoxInput(Box):
 
 class BoxDecision(Box):
     """ Place for the documentation """
-
-    name = 'Decision'
-
-    def __init__(self, number, method):
+    # methods = {'RandomForest': RandomForestClassifier, 'Stacking': StackingClassifier, 'AdaBoost': AdaBoostClassifier, 'Voting': VotingClassifier, 'Bagging': BaggingClassifier}
+    def __init__(self, number, method='Stacking', estimators=[]):
         """ method needs to be a string """
         super().__init__(number)
-        self.Id = f'Box_{self.box_number}_{self.name}'
+        self.estimators = estimators
         self.method = method
+        self.name = f'{self.method}_Decision'
+        self.Id = f'Box_{self.box_number}_{self.name}'
+        self.save_decision_scaler_name = '/Backups/decision_scaler'+self.method+'.pkl'
+        if method == 'RandomForest':
+            self.model = RandomForestClassifier(random_state=42)
+        elif method == 'Bagging':
+            self.model = BaggingClassifier(base_estimator=MLPClassifier(hidden_layer_sizes=(100, 50), activation="relu", solver="adam", alpha=0.01, learning_rate="adaptive", max_iter=500, random_state=42), n_estimators=10)
+        elif method == 'AdaBoost':
+            self.model = AdaBoostClassifier(n_estimators=10)
+        elif method == 'Complex_Stacking':
+            #this will take the confusion matrices of the given estimators as an weight
+            assert len(estimators)!=0, 'You need to give a list of estimators'
+            self.model = final_estimator(random_state=42)
+        elif method == 'Stacking':
+            list_of_est = [(est.name, est.model) for est in estimators]
+            self.model = StackingClassifier(estimators=list_of_est, final_estimator=final_estimator(random_state=42))
+        elif method == 'Simple_Stacking':
+            assert len(estimators)!=0, 'You need to give a list of estimators'
+            self.model = MLPClassifier(hidden_layer_sizes=(20, 10), activation="relu", solver="adam", alpha=0.01, learning_rate="adaptive", max_iter=500, random_state=42)
 
-    def max(self, data):
-        """chooses the prediction with the highest percentage"""
-        return np.max(data[0])
+    @staticmethod
+    def majority_vote_predict(data, estimators):
+        predictions = [est.classify(data, create_file=False, user=False) for est in estimators]
+        occourance = [predictions.count(pred) for pred in predictions]
+        return predictions[np.argmax(occourance)]
 
+    @staticmethod
+    def weighted_average_predict(data, estimators, weights):
+        assert len(weights)==len(estimators), 'length of weights must match length of estimators'
+        predictions = [est.classify(data, create_file=False, user=False) for est in estimators]
+        pred_encoder = LabelEncoder().fit(predictions)
+
+        occourance = [predictions.count(pred) for pred in predictions]
+        return pred_encoder.inverse_transform(round(np.sum(weights*pred_encoder.transform(predictions))/len(estimators)))
+
+    @staticmethod
+    def from_matrix_to_list(matrix):
+        return [k for row in matrix for k in row]
+
+    def preprocessing_for_simple_stack(self, feature_list):
+        """the training_data should have the form [[features-groups x files x learners], true-genre ] 
+        (like the feature training data where learners is replaced by features)"""
+        if not os.path.isfile(self.path_to_store+self.save_decision_scaler_name):
+            self.decision_scaler = {}
+        else:
+            with open(self.path_to_store+self.save_decision_scaler_name, 'rb') as f:
+                    self.decision_scaler = pickle.load(f)
+        yhat_data = []
+        for X_test, feature in feature_list:
+            yhat_list = []
+            for base_learner in self.estimators:
+                try:
+                    model_file=self.path_to_store + base_learner.saved_model_files[feature]
+                except:
+                    model_file=self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + base_learner.name + '/' + feature + '_for_999_files_10.pkl' 
+
+                with open(model_file,'rb') as f:
+                    base_learner.model=pickle.load(f)
+
+                #list of predictions for all files for one base learner = column 
+                yhat = base_learner.model.predict(X_test) 
+                yhat_list.append(yhat)
+            yhat_data.append(np.array(yhat_list, dtype=float).transpose())
+            if not os.path.isfile(self.path_to_store+self.save_decision_scaler_name):
+                self.decision_scaler.update({feature : StandardScaler().fit(yhat_data[-1])}) 
+
+        if not os.path.isfile(self.path_to_store+self.save_decision_scaler_name):
+            self.save_to_file(self.decision_scaler, self.save_decision_scaler_name, mode='pickle')
+        #now, yhat_data has the same form as feature_data in preprocess
+        #predict_list has the same form like feature_list
+        predict_list = [[self.decision_scaler[feat_nam].transform(dat), feat_nam] for (dat, feat_nam) in zip(yhat_data, self.feature_names)]
+        return predict_list
+
+    def decision_train(self, training_data, repetitions=1, load_model_files=''):
+        assert self.method!='Voting', 'You can not train the Voting Classifier.'
+
+        if self.method=='Complex_Stacking':
+            #training_data is used as test_data to produce the confusion matrices which in turn are the input
+            #for the final estimator
+
+            #now prepare the testing data for the 
+            feature_list, y_test = training_data
+            feature_list={i: k for (k,i) in feature_list}
+            
+            confusion_matrices = []
+            for base_learner in self.estimators:
+                for X_test, feature in feature_list:
+                    #if we have not trained the base learners yet, we need to load the Backups
+                    try:
+                        model_file=self.path_to_store + base_learner.saved_model_files[feature]
+                    except:
+                        model_file=self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + base_learner.name + '/' + feature + '_for_999_files_10.pkl' 
+
+                    with open(model_file,'rb') as f:
+                        base_learner.model=pickle.load(f)
+
+                    yhat = base_learner.model.predict(X_test)
+                    cf=confusion_matrix(y_test,yhat)
+                    appearance=[y_test.tolist().count(k) for k in range(0,10)]
+                    cf_dummy =[]
+                    for line in cf:
+                        cf_dummy.append([pred/app for pred, app in zip(line, appearance)])
+                    confusion_matrices.append(from_matrix_to_list(cf_dummy))#this appends a list to confusion_matrices
+
+            #we want to be flat, since it is the weight
+            confusion_matrices = from_matrix_to_list(confusion_matrices)
+
+            #STILL TO DO HERE: (but not for the presentation)
+            # prepare weighted training data and don't forget to scale!!!
+
+            # self.train(weighted_training_data)
+            pass
+
+        elif self.method == 'Simple_Stacking':
+            feature_list, y_test = training_data
+            predict_list = self.preprocessing_for_simple_stack(feature_list)
+            self.train([predict_list,y_test], repetitions=repetitions)
+
+        else:
+            self.train(training_data, repetitions=repetitions)
+
+
+    def decision_test(self, test_data, feature='all', load_model_file=''):
+        if self.method == 'Simple_Stacking':
+            feature_list, y_test = test_data
+            predict_list = self.preprocessing_for_simple_stack(feature_list)
+            return self.test([predict_list, y_test], feature, load_model_file)
+        else:
+            return self.test(test_data, feature, load_model_file)
+
+    def decision_classify(self, music_file, feature='all', create_file=False, model_file=' ', scaler_file='', encoder_file='',user=False, duration=30, offset=0):
+        #for MLP and SVM
+        if 'self.arch' in locals():
+            feature = self.arch
+        if self.method == 'Simple_Stacking':
+            feature_data = self.preprocess_for_calssify(music_file, feature, scaler_file, encoder_file, user, duration, offset)
+            # print('feature_data aus classify: \n', feature_data)
+            predict_data = self.preprocessing_for_simple_stack([[feature_data, feature]])[0][0]
+            # print('predict_data aus classify: \n', predict_data)
+
+            if not os.path.isfile(model_file):
+                try:
+                    model_file = self.path_to_store + self.saved_model_files[feature]
+                except:
+                    model_file = self.path_to_store + '/' + 'Backups' + '/' + 'model_Backup_' + self.name + '/' + feature + '_for_999_files_10.pkl'
+
+            assert model_file.endswith('.pkl'), 'Needs to be a .pkl-file'
+            with open(model_file, 'rb') as f:
+                self.model = pickle.load(f)
+
+            prediction = self.encoder.inverse_transform(self.model.predict(predict_data))
+
+            # save the prediction
+            if create_file == True:
+                music_name = music_file.split('/')[-1]
+                prediction_list = [music_name, feature, prediction[0]]
+                save_model_name = f'/prediction_{self.name}/{music_name}_{feature}_{self.time_stamp}.csv'
+                self.save_to_file([[prediction_list], ['file name', 'feature', 'genre']], save_model_name, mode='csv')
+
+            return prediction[0]
+
+        else:
+            return self.classify(music_file, feature, create_file, model_file, scaler_file, encoder_file,user, duration, offset)
+
+    def decision_metrics_plot(self, test_data, feature='all', load_model_file='', encoder_file=''):
+        if self.method == 'Simple_Stacking':
+            feature_list, y_test = test_data
+            predict_list = self.preprocessing_for_simple_stack(feature_list)
+            self.metrics_plot([predict_list, y_test], feature, load_model_file, encoder_file)
+        else:
+            self.metrics_plot(test_data, feature, load_model_file, encoder_file)
 
 # _____________________________________________________________________
 #                         FUNCTIONS
 # _____________________________________________________________________
 
-def save_test_overall_model():
-    """ This function should run a test of the entire Box-Structure and save it to a file """
-    if create_file:
-        save_model_name = f'/score_{self.Id}/{self.time_stamp}.csv'
-        self.save_to_file([[score_list], columns], save_model_name, mode='csv')
-    pass
 
 
 # _____________________________________________________________________
@@ -647,55 +772,64 @@ def save_test_overall_model():
 
 def main():
     """ Place for the documentation """
-    # Program = [BoxInput(1),
-    #            BoxLogisticRegression(2, 'hardcore'),
-    #            BoxSupportVectorMachine(3, "linear"),
-    #            BoxSupportVectorMachine(4, "poly"),
-    #            BoxSupportVectorMachine(5, "rbf"),
-    #            BoxSupportVectorMachine(6, "sigmoid"),
-    #            BoxMLPClassifier(7, 'notTF'),
-    #            BoxRandomForestClassifier(8, 'Endor'),
-    #            BoxDecision(9, 'max')]
 
-    # feature_list, y = Program[0].preprocess(
-    #     feature_data_file=Program[0].path_to_store + '/features_10k.csv')
-    # # print(feature_list)
-    # # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/blues/blues.00020.au'
-    music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/country/country.00045.wav"
-    music_file = "C:/Users/JD/Desktop/sdkarte/Cardd/Music/The Weeknd - Often (Kygo Remix).mp3"
-    # # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/output.wav'
-    # user = False
-    feature_names = ["all", "chroma_stft",
-                     "spectral_centroid", "zero_crossing_rate", "mfcc", "chords", "all_except_chords"]
-    # features = "chroma_stft"
-    # feature_list, y = Classification_program_for_mlp[0].preprocess(
-    #     feature_data_file=Classification_program_for_mlp[0].path_to_store + '/features_10k.csv')
-    # user, music_file, duration, offset = Classification_program_for_mlp[0].decide()
+    feature_names = ["all", "chroma_stft", "spectral_centroid", "zero_crossing_rate", "mfcc", "chords", "all_except_chords"]
     user = False
     duration = 3
-    offset = 90
+    offset = 0
 
-    for features in feature_names:
-        # features = "chroma_stft"
-        Classification_program_for_mlp = [BoxInput(1),
-                                          BoxLogisticRegression(2, 'hardcore'),
-                                          BoxSupportVectorMachine(3, features),
-                                          BoxMLPClassifier(7, features),
-                                          BoxRandomForestClassifier(8, 'Endor'),
-                                          BoxDecision(9, 'max')]
-        for Box in Classification_program_for_mlp[1:-1]:
-            print(' ')
-            # print(f"Result for :")
+    music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/data/genres/pop/pop.00048.au'
+    # music_file = "C:/Users/JD/PycharmProjects/newstart/data_music/pop/pop.00011.wav"
+    # music_file = 'C:/Users/Lenovo/Desktop/Programme/Python Testlabor/ML/MUGGE/src/Aufnahme3.wav'
+    # music_file= 'C:/Users/Lenovo/Desktop/Music/Amazon MP3/Stereoact feat Kerstin Ott/Die immer lacht/01-01- Die immer lacht (Radio 2016 Mix).mp3'
+    # user, music_file, duration, offset = Input_Box.decide()
 
-            # print(f'Training of {Box.Id}')
-            # Box.train_for_classification([feature_list, y], features)
-            # print(Box.test([feature_list, y]))
-            print(
-                Box.classify(music_file, feature=features, create_file=False, user=user, duration=duration,
-                             offset=offset))
-            # print("wait for your confusion matrix...")
-            # Box.metrics_plot([feature_list, y])
+    Input_Box = BoxInput(1)
 
+    base_learners =   [
+                        BoxLogisticRegression(2),
+                      # BoxSupportVectorMachine(3, arch = "all"),
+                      # BoxSupportVectorMachine(4, arch = "chroma_stft"),
+                      # BoxSupportVectorMachine(5, arch = "spectral_centroid"),
+                      # BoxSupportVectorMachine(6, arch = "zero_crossing_rate"),
+                      # BoxSupportVectorMachine(7, arch = "mfcc"),
+                      # BoxSupportVectorMachine(8, arch = "chords"),
+                      # BoxSupportVectorMachine(9, arch = "all_except_chords"),
+                      BoxMLPClassifier(10, arch = "all"),
+                      BoxMLPClassifier(11, arch = "chroma_stft"),
+                      BoxMLPClassifier(12, arch = "spectral_centroid"),
+                      BoxMLPClassifier(13, arch = "zero_crossing_rate"),
+                      BoxMLPClassifier(14, arch = "mfcc"),
+                      BoxMLPClassifier(15, arch = "chords"),
+                      BoxMLPClassifier(16, arch = "all_except_chords"),
+                      ]
+
+    feature_list, y = Input_Box.preprocess(feature_data_file=Input_Box.path_to_store + '/features_10k.csv')
+
+    for Box in base_learners:
+        print(' ')
+        print(f'Training of {Box.Id}')
+        Box.train([feature_list, y], repetitions=1)
+        print(Box.test([feature_list, y]))
+        print(Box.Id,'   ', Box.classify(music_file, create_file=True, user=user, duration=duration, offset=offset))
+        # Box.metrics_plot([feature_list, y])
+
+    Decisions = [BoxDecision(17, 'Simple_Stacking', estimators=base_learners),
+                BoxDecision(18, 'Bagging'),
+                BoxDecision(19, 'AdaBoost'),
+                BoxDecision(20, 'Stacking', estimators=base_learners),
+                BoxDecision(21, 'RandomForest')
+                ]
+
+    for Box in Decisions:
+        print(' ')
+        Box.decision_train([feature_list, y], repetitions=1)
+        print(Box.decision_test([feature_list, y]))
+        print(Box.name,'   ', Box.decision_classify(music_file, create_file=True, user=user, duration=duration, offset=offset))
+        Box.decision_metrics_plot([feature_list, y])
+
+    Voter = BoxDecision(22, method='Voting')
+    print(Voter.majority_vote_predict(music_file, base_learners))
 
 if __name__ == '__main__':
     main()
