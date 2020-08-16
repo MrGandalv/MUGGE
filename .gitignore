@@ -1,2 +1,4 @@
-/.idea
-/test_for_gitignore
+src/Backups/**
+src/oldBackups/**
+.vscode/
+prediction*

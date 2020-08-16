@@ -1,0 +1,13 @@
+BESTSCORE:,0.4878,the_best_parameters_are:,{'C':,"1.0,",'gamma':,"'scale',",'kernel':,'rbf'}
+Mean:,0.4234,Std.:,0.0092,for,{'C':,"1.0,",'gamma':,"'scale',",'kernel':,'linear'}
+Mean:,0.3333,Std.:,0.0213,for,{'C':,"1.0,",'gamma':,"'scale',",'kernel':,'poly'}
+Mean:,0.4878,Std.:,0.0176,for,{'C':,"1.0,",'gamma':,"'scale',",'kernel':,'rbf'}
+Mean:,0.4234,Std.:,0.0092,for,{'C':,"1.0,",'gamma':,"'auto',",'kernel':,'linear'}
+Mean:,0.3335,Std.:,0.0219,for,{'C':,"1.0,",'gamma':,"'auto',",'kernel':,'poly'}
+Mean:,0.4872,Std.:,0.0173,for,{'C':,"1.0,",'gamma':,"'auto',",'kernel':,'rbf'}
+Mean:,0.4277,Std.:,0.0095,for,{'C':,"0.5,",'gamma':,"'scale',",'kernel':,'linear'}
+Mean:,0.3008,Std.:,0.0242,for,{'C':,"0.5,",'gamma':,"'scale',",'kernel':,'poly'}
+Mean:,0.4608,Std.:,0.0189,for,{'C':,"0.5,",'gamma':,"'scale',",'kernel':,'rbf'}
+Mean:,0.4277,Std.:,0.0095,for,{'C':,"0.5,",'gamma':,"'auto',",'kernel':,'linear'}
+Mean:,0.2998,Std.:,0.0221,for,{'C':,"0.5,",'gamma':,"'auto',",'kernel':,'poly'}
+Mean:,0.4612,Std.:,0.0189,for,{'C':,"0.5,",'gamma':,"'auto',",'kernel':,'rbf'}

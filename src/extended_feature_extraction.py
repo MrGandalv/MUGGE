@@ -18,17 +18,17 @@ starttime = time.time()
 
 #  The following function is an auxiliary function for the main function 'write_feature_file'.
 #  Here, for the 'mode' parameter only the states "w" (write) and "a" (append) are admissible.
-#  If "a" is committed, the function opens the .csv file 'features_file_name', and 'line_to_add' is added
-#  to the end of the file (in a new line). Gives an error, when 'features_file_name' does not exist.
-#  If "w" is committed, it creates an empty .csv file with the name 'features_file_name', and 'line_to_add' is added
+#  If "a" is committed, the function opens the .csv file 'file_name', and 'line_to_add' is added
+#  to the end of the file (in a new line). Gives an error, when 'file_name' does not exist.
+#  If "w" is committed, it creates an empty .csv file with the name 'file_name', and 'line_to_add' is added
 #  in the file (in the first line).
 #  Important: In writting mode, an existing file with the same name will be erased/ overwritten.
-#  The given file 'features_file_name' must be a .csv file.
+#  The given file 'file_name' must be a .csv file.
 #  The "with" statement ensures that the file will automatically be closed afterwards.
 
 
 def append_data_to_file(features_file_name, line_to_add, mode):
-    assert features_file_name.endswith(".csv"), "The file 'features_file_name' must be a .csv file."
+    assert features_file_name.endswith(".csv"), "The file 'file_name' must be a .csv file."
     assert mode in ["w", "a"], "The 'mode'-parameter does not follow the intended function of this script. "
     file = open(features_file_name, mode, newline="")
     with file:
@@ -37,24 +37,24 @@ def append_data_to_file(features_file_name, line_to_add, mode):
 
 
 #  The 'write_feature_file' is the main function of this script.
-#  The functions goal is to create a .csv file named 'features_file_name', with specified music features of
+#  The functions goal is to create a .csv file named 'file_name', with specified music features of
 #  a given dataset of songs in it. Usually, the file can then be found in the directory of your current python
 #  project. The created file starts with a headline, consisting of "filename", followed by the names of
 #  the extracted features and ending with "label", i.e. the genre of the song. Every other row persists of the
 #  extracted data of one song, structured in the same order as the headline.
 #
-#  The parameters 'features_file_name' (name of the desired .csv file)
+#  The parameters 'file_name' (name of the desired .csv file)
 #  and 'dataset_path' (the path, where the dataset is stored) should be committed as strings, e.g.
-#  features_file_name= "music_features.csv",
+#  file_name= "music_features.csv",
 #  dataset_path = "C:/Users/MaxM/PycharmProjects/music_project/music_data".
 #
-#  With the list of strings 'genrelist' and 'featurelist' one can specify, which genres from the database
+#  With the list of strings 'genrelist' and 'names' one can specify, which genres from the database
 #  should be considered and which features should be extracted. Use the .split() method to easily create
 #  the wanted format from a pure string, e.g. genrelist="rock pop".split(),
-#  featurelist="chroma_stft spectral_centroid zero_crossing_rate mfcc".split() .
+#  names="chroma_stft spectral_centroid zero_crossing_rate mfcc".split() .
 #  Important: Dont forget spaces between the words! Also, right now, only the 4 features
 #  "chroma_stft", "spectral_centroid", "zero_crossing_rate" and "mfcc" are supported. If other features are commited,
-#  they wont be extracted and they cant be seen in the file. An Assertion-Error gets raised, if 'featurelist'
+#  they wont be extracted and they cant be seen in the file. An Assertion-Error gets raised, if 'names'
 #  contains no supported features at all. The "mfcc" feature consists of 20 different features.
 #
 #  The integer 'max_songs_per_genre' can be used to limit the amount of extracted songs per genre,
@@ -63,10 +63,10 @@ def append_data_to_file(features_file_name, line_to_add, mode):
 #  the wanted format and information.
 #
 #  The last (string-)parameter 'overwrite' should be used in the following way: Only if explicitly "Yes" is
-#  plugged in, an existing file with the same name as 'features_file_name' can be overwritten/erased. Thus, the
+#  plugged in, an existing file with the same name as 'file_name' can be overwritten/erased. Thus, the
 #  goal is here to prevent an accidental loss of an existing file, by setting, e.g. overwrite="".
 #  Another option is to commit overwrite="Append". In this case one can extend an existing file with
-#  the same name as 'features_file_name' by more data. This option is only useful to append different genres
+#  the same name as 'file_name' by more data. This option is only useful to append different genres
 #  step by step, not to add more features to an existing file, because then the structure of the file wont
 #  be consistent.
 #
@@ -76,7 +76,7 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
     does_features_file_exist = os.path.isfile(features_file_name)
     does_dataset_path_exist = os.path.isdir(dataset_path)
     assert does_dataset_path_exist, "The  path 'dataset_path' cant be found."
-    assert not does_features_file_exist or overwrite in "Yes Append".split(), "Choose a new 'file-name', if you dont want to overwrite it."
+    assert not does_features_file_exist or overwrite in "Yes Y y Append".split(), "Choose a new 'file-name', if you dont want to overwrite it."
     c, s, z, m = 0, 0, 0, 0
     headline = "filename"
     if "chroma_stft" in featurelist:
@@ -93,9 +93,9 @@ def write_feature_file(features_file_name, dataset_path, genrelist, featurelist,
         for i in range(1, 21):  # remember: the mfcc feature consists of 20 different features
             headline += f" mfcc{i}_mean mfcc{i}_var"
     headline += " label"
-    assert max(c, s, z, m) > 0, "There are no supported features given in 'featurelist'."
+    assert max(c, s, z, m) > 0, "There are no supported features given in 'names'."
     if overwrite == "Append":
-        assert does_features_file_exist, "Attention: Append not possible, because 'features_file_name' cant be found. "
+        assert does_features_file_exist, "Attention: Append not possible, because 'file_name' cant be found. "
     else:
         append_data_to_file(features_file_name, headline.split(), "w")
     for genre in genrelist:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     #  Now the following command should create a data file, which consists of a headline and 4 (rsp.23 because of mfcc)
     #  features from 5 songs per genre:
     #
-    write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 100, "")
+    #write_feature_file(features_file_name, my_dataset_path, genrelist, featurelist, 100, "")
     #
     #  should take around 30 seconds.
 
