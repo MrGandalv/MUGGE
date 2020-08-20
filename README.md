@@ -17,8 +17,14 @@ We are Students of the University of Hamburg (Germany) and in this project we tr
 -'all except cords'
 (in future versions the user shall be able to make an own collection of features)
 
+**base learner options**
+- MLP Neural Network from sklearn (optimized for given features)
+- Support Vector Machine from sklearn (optimized for given features)
+- Logistic Regression (unoptimized)
+
 **ensemble learner options:**
-- bagging from sklearn
+- bagging from sklearn (unoptimized)
+- Random Forest from sklearn (unoptimized)
 - MLP Neural Network that takes into account all the base learners that have been selected in step 2 (see above)
 (in the future we plan to include more ensemble learners for an own handpicked collection of base learners)
 
@@ -50,3 +56,4 @@ Mugge (or also "Mucke" or "Mukke") is an informal German synonym for a music per
 - [ ] the user shall be able to make an own collection of features
 - [ ] include more ensemble learners for an own handpicked collection of base learners
 - [ ] include own base learners like given Neural Networks (CNN's and RNN's) done with tensorflow
+- [ ] implement higher order features
