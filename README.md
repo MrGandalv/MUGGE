@@ -22,14 +22,14 @@ We are Students of the University of Hamburg (Germany) and in this project we tr
 - MLP Neural Network that takes into account all the base learners that have been selected in step 2 (see above)
 (in the future we plan to include more ensemble learners for an own handpicked collection of base learners)
 
-**dataset**
+### dataset
 
 We used the GTZAN dataset for music classification. It consists out of 10 genres with 100 audio files each, all having a length of 30 seconds.
 (we downloaded it from [kaggle](https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification?))
 
 In the current version we splitted each music file into 3s long pieces.
 
-**funfact**
+### funfact
 
 Mugge (or also "Mucke" or "Mukke") is an informal German synonym for a music performance (and inofficially but widely spread also for music itself).
 
