@@ -1,7 +1,7 @@
 # Project M.U.G.G.E. - Mostly Unfinished Genre Grading Engine
 
 ## Description
-We are Students of the University of Hamburg (Germany) and in this project we try to recognize the genere of a given music file. It was important to us that the user has as much freedom as possible and hence the user can design the structure of the analysing algorithm in three steps:
+We are Students of the University of Hamburg (Germany) and in this project we try to recognize the genre of a given music file. It was important to us that the user has as much freedom as possible and hence the user can design the structure of the analysing algorithm in three steps:
 
 1. select all the features from the feature options (see below) you wish to be taken into account  
 2. select an arbitrary amount of base learners (you have to choose a machine learning method for each one)
@@ -23,12 +23,14 @@ We are Students of the University of Hamburg (Germany) and in this project we tr
 (in the future we plan to include more ensemble learners for an own handpicked collection of base learners)
 
 **dataset**
+
 We used the GTZAN dataset for music classification. It consists out of 10 genres with 100 audio files each, all having a length of 30 seconds.
 (we downloaded it from [kaggle](https://www.kaggle.com/andradaolteanu/gtzan-dataset-music-genre-classification?))
 
 In the current version we splitted each music file into 3s long pieces.
 
 **funfact**
+
 Mugge (or also "Mucke" or "Mukke") is an informal German synonym for a music performance (and inofficially but widely spread also for music itself).
 
 ## Results
