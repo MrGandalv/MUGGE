@@ -4,7 +4,7 @@
 We are Students of the University of Hamburg (Germany) and in this project we try to recognize the genre of a given music file. It was important to us that the user has as much freedom as possible and hence the user can design the structure of the analysing algorithm in three steps:
 
 1. select all the features from the feature options (see below) you wish to be taken into account  
-2. select an arbitrary amount of base learners (you have to choose a machine learning method for each one)
+2. select an arbitrary amount of base learners (you have to choose a machine learning method for each one from a list of base learners (see below))
 3. select an ensemble learner from the ensemble learner list (see below)
 
 **feature options:**
