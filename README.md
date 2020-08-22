@@ -44,11 +44,11 @@ Mugge (or also "Mucke" or "Mukke") is an informal German synonym for a music per
 
 - **best ensemble learner** was the bagging learner (given by sklearn) with an accuracy of 73.5 % (last stable version):
 
-![](https://github.com/MrGandalv/MUGGE/blob/master/doc/Bagging_Decision.png)
+![](https://github.com/MrGandalv/MUGGE/blob/master/img/Bagging_Decision.png)
 
 - **best base learner** was the MLP Neural Network (given by sklearn) with an accuracy of 72.1 % (last stable version):
 
-![](https://github.com/MrGandalv/MUGGE/blob/master/src/barchart_accuracy_whole_songs.png)
+![](https://github.com/MrGandalv/MUGGE/blob/master/img/barchart_accuracy_whole_songs.png)
 
 ## To be done in the future
 

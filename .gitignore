@@ -1,4 +1,8 @@
 src/Backups/**
 src/oldBackups/**
+doc/private/**
 .vscode/
 prediction*
+*.wav
+*.mp3
+rec/**
